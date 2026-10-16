@@ -56,6 +56,13 @@ export const metadata = {
         alt: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
         type: 'image/png',
       },
+      {
+        url: '/web-app-manifest-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'IndoSkySea Favicon Logo',
+        type: 'image/png',
+      },
     ],
   },
   twitter: {
