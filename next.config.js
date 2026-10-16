@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Prevents double mounting in dev for Leaflet map instances
+  reactStrictMode: false,
   swcMinify: true,
   poweredByHeader: false,
+  experimental: {
+    serverComponentsExternalPackages: ['ws'],
+  },
   async headers() {
     return [
       {
