@@ -16,7 +16,9 @@ import {
   Minus,
   Route,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  ShieldAlert,
+  Download
 } from 'lucide-react';
 import { getAirlineLogo, getShipLogo } from '../lib/logos';
 import {
@@ -26,6 +28,8 @@ import {
   FlagEurope,
   FlagUSA
 } from '../lib/flags';
+import DisclaimerModal from './DisclaimerModal';
+import PwaInstallModal from './PwaInstallModal';
 
 // Google Maps Tile Providers
 const GOOGLE_MAP_TILES = {
@@ -83,6 +87,33 @@ export default function MapTracker() {
   const [tileMode, setTileMode] = useState('roadmap');
   const [activeRegion, setActiveRegion] = useState('id');
   const [selectedEntity, setSelectedEntity] = useState(null); // { type: 'plane'|'ship', id: '...' }
+
+  // Disclaimer & PWA Install states
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  // Check disclaimer acceptance on initial mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const accepted = localStorage.getItem('indoskysea_disclaimer_accepted_v1');
+      if (!accepted) {
+        setShowDisclaimerModal(true);
+      }
+    }
+  }, []);
+
+  // Listen for PWA beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
 
   // Touch gesture tracking for mobile bottom sheet
   const touchStartY = useRef(0);
@@ -641,7 +672,7 @@ export default function MapTracker() {
                 <span className="relative inline-flex rounded-full h-2 sm:h-2.5 w-2 sm:w-2.5 bg-emerald-500"></span>
               </span>
               <span className="text-xs font-extrabold tracking-wide text-slate-800 uppercase whitespace-nowrap">
-                Global Radar
+                IndoSkySea
               </span>
             </div>
 
@@ -716,6 +747,15 @@ export default function MapTracker() {
               <Search className="w-4 h-4" />
             </button>
 
+            {/* PWA Install Button (Works on Windows, Android & iOS Guide) */}
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="glass-clean w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl text-slate-600 hover:text-sky-600 flex items-center justify-center transition-colors shadow-sm"
+              title="Install Aplikasi IndoSkySea (PWA)"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+
             {/* Google Maps Layer Switcher */}
             <button
               onClick={() => setTileMode(tileMode === 'roadmap' ? 'satellite' : 'roadmap')}
@@ -762,7 +802,7 @@ export default function MapTracker() {
           </div>
         )}
 
-        {/* Filter Strip: Unified Entity Toggles + Regional Presets with Authentic Flag Icons */}
+        {/* Filter Strip: Unified Entity Toggles + Regional Presets with Authentic Flag Icons + Disclaimer */}
         <div className="pointer-events-auto max-w-full">
           <div className="glass-clean p-1 rounded-xl shadow-sm flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto no-scrollbar max-w-full">
             
@@ -824,6 +864,19 @@ export default function MapTracker() {
                 </button>
               );
             })}
+
+            {/* Subtle Divider */}
+            <div className="h-4.5 w-px bg-slate-300/80 mx-0.5 shrink-0" />
+
+            {/* Disclaimer & Info Button */}
+            <button
+              onClick={() => setShowDisclaimerModal(true)}
+              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0 whitespace-nowrap text-slate-600 hover:text-amber-700 hover:bg-amber-50/80"
+              title="Ketentuan Penggunaan & Disclaimer"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Disclaimer</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1175,6 +1228,26 @@ export default function MapTracker() {
           </div>
         </div>
       )}
+
+      {/* 4. Ketentuan Penggunaan & Emergency Monitoring Disclaimer Modal */}
+      <DisclaimerModal
+        isOpen={showDisclaimerModal}
+        onClose={() => setShowDisclaimerModal(false)}
+        onAccept={() => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('indoskysea_disclaimer_accepted_v1', 'true');
+          }
+          setShowDisclaimerModal(false);
+        }}
+      />
+
+      {/* 5. PWA Install Guide & Trigger Modal (Windows, Android & iOS) */}
+      <PwaInstallModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        deferredPrompt={deferredPrompt}
+        onInstallSuccess={() => setDeferredPrompt(null)}
+      />
     </div>
   );
 }
