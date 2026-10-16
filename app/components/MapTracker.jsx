@@ -834,19 +834,19 @@ export default function MapTracker() {
           className={`fixed z-30 transition-all duration-300 ease-out pointer-events-auto
             /* Desktop (md: and above): Floating Card */
             md:bottom-5 md:right-4 md:left-auto md:w-[430px] md:max-h-[85vh] md:rounded-2xl md:shadow-2xl md:border md:border-slate-200/90
-            /* Mobile (< md:): Floating Card Bottom Sheet with Sleek Rounded Corners on Left & Right */
-            max-md:bottom-3 max-md:left-3 max-md:right-3 max-md:rounded-[24px] max-md:shadow-2xl max-md:border max-md:border-slate-200/90
+            /* Mobile (< md:): Full-width Bottom Sheet docked at bottom, left-0, right-0, with rounded corners at top-left & top-right ONLY */
+            max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-[28px] max-md:rounded-b-none max-md:shadow-[0_-10px_35px_rgba(0,0,0,0.14)]
             ${mobileSheetExpanded
-              ? 'max-md:h-[83dvh] max-md:max-h-[83dvh]'
-              : 'max-md:h-[185px] max-md:max-h-[185px]'
+              ? 'max-md:h-[88dvh] max-md:max-h-[88dvh]'
+              : 'max-md:h-[195px] max-md:max-h-[195px]'
             }
           `}
         >
-          <div className="glass-clean-card h-full rounded-[24px] flex flex-col overflow-hidden bg-white/95 backdrop-blur-xl">
+          <div className="glass-clean-card h-full md:rounded-2xl max-md:rounded-t-[28px] max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:border-t max-md:border-slate-200/90 flex flex-col overflow-hidden bg-white/95 backdrop-blur-xl">
             
-            {/* Mobile Pull Handle Pill (Minimal sleek pill bar, no text) */}
+            {/* Mobile Pull Handle Pill (Minimal sleek pill bar, no text, rounded top) */}
             <div
-              className="md:hidden pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing flex justify-center items-center select-none bg-slate-50/80 border-b border-slate-100/90"
+              className="md:hidden pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing flex justify-center items-center select-none bg-slate-50/80 border-b border-slate-100/90 max-md:rounded-t-[28px]"
               onClick={() => setMobileSheetExpanded(!mobileSheetExpanded)}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
