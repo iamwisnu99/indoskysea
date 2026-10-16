@@ -8,8 +8,10 @@ export const viewport = {
   themeColor: '#ffffff',
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://indoskysea.primadev.id';
+
 export const metadata = {
-  metadataBase: new URL('https://indoskysea.vercel.app'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
     template: '%s | IndoSkySea',
@@ -39,12 +41,12 @@ export const metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: 'https://indoskysea.vercel.app',
+    canonical: SITE_URL,
   },
   openGraph: {
     type: 'website',
     locale: 'id_ID',
-    url: 'https://indoskysea.vercel.app',
+    url: SITE_URL,
     siteName: 'IndoSkySea',
     title: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
     description: 'Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia. Pantau pesawat komersial, kapal pesiar samudra, armada PELNI, dan kapal pertahanan di Google Maps.',
@@ -109,11 +111,11 @@ export default function RootLayout({ children }) {
         {/* Open Graph & Social Media Preview Meta (WhatsApp, Telegram, Facebook, LinkedIn, Twitter/X, Instagram) */}
         <meta property="og:site_name" content="IndoSkySea" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://indoskysea.vercel.app" />
+        <meta property="og:url" content={SITE_URL} />
         <meta property="og:title" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
         <meta property="og:description" content="Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia. Pantau pesawat komersial, kapal pesiar samudra, armada PELNI, dan kapal pertahanan di Google Maps." />
-        <meta property="og:image" content="https://indoskysea.vercel.app/og-image.png" />
-        <meta property="og:image:secure_url" content="https://indoskysea.vercel.app/og-image.png" />
+        <meta property="og:image" content={`${SITE_URL}/og-image.png`} />
+        <meta property="og:image:secure_url" content={`${SITE_URL}/og-image.png`} />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -126,11 +128,11 @@ export default function RootLayout({ children }) {
         <meta name="twitter:creator" content="@indoskysea" />
         <meta name="twitter:title" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
         <meta name="twitter:description" content="Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia dengan peta interaktif Google Maps." />
-        <meta name="twitter:image" content="https://indoskysea.vercel.app/og-image.png" />
+        <meta name="twitter:image" content={`${SITE_URL}/og-image.png`} />
         <meta name="twitter:image:alt" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
 
         {/* Canonical URL Link */}
-        <link rel="canonical" href="https://indoskysea.vercel.app" />
+        <link rel="canonical" href={SITE_URL} />
 
         {/* Favicon & Icons */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

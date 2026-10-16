@@ -96,8 +96,8 @@ flight-radar/
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/your-username/flight-radar.git
-   cd flight-radar
+   git clone https://github.com/iamwisnu99/indoskysea.git
+   cd indoskysea
    ```
 
 2. Install dependencies:
@@ -109,6 +109,7 @@ flight-radar/
    ```bash
    cp .env.example .env.local
    ```
+   *Note: Default domain is `https://indoskysea.primadev.id`. If deploying to `indoskysea.com` or `indoskysea.id`, update `NEXT_PUBLIC_SITE_URL` in `.env.local` or your hosting dashboard.*
 
 4. Run development server:
    ```bash

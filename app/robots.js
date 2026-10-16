@@ -1,3 +1,5 @@
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://indoskysea.primadev.id';
+
 export default function robots() {
   return {
     rules: {
@@ -5,6 +7,6 @@ export default function robots() {
       allow: '/',
       disallow: ['/api/'],
     },
-    sitemap: 'https://indoskysea.vercel.app/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
