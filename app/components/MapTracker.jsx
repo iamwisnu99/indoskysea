@@ -47,11 +47,11 @@ const GOOGLE_MAP_TILES = {
 
 // Global Regional Camera Presets with Authentic Flag Icons
 const REGION_PRESETS = [
-  { id: 'id', name: 'Indonesia', flag: FlagIndonesia, center: [-2.5489, 118.0149], zoom: 5 },
-  { id: 'world', name: 'Seluruh Dunia', flag: FlagWorld, center: [20.0, 10.0], zoom: 2.2 },
-  { id: 'asia', name: 'Asia-Pasifik', flag: FlagAsiaPacific, center: [15.0, 115.0], zoom: 4 },
-  { id: 'europe', name: 'Eropa & Timur Tengah', flag: FlagEurope, center: [40.0, 25.0], zoom: 4 },
-  { id: 'usa', name: 'Amerika', flag: FlagUSA, center: [38.0, -95.0], zoom: 4 },
+  { id: 'id', name: 'Indonesia', shortName: 'Indonesia', flag: FlagIndonesia, center: [-2.5489, 118.0149], zoom: 5 },
+  { id: 'world', name: 'Seluruh Dunia', shortName: 'Dunia', flag: FlagWorld, center: [20.0, 10.0], zoom: 2.2 },
+  { id: 'asia', name: 'Asia-Pasifik', shortName: 'Asia', flag: FlagAsiaPacific, center: [15.0, 115.0], zoom: 4 },
+  { id: 'europe', name: 'Eropa & Timur Tengah', shortName: 'Eropa', flag: FlagEurope, center: [40.0, 25.0], zoom: 4 },
+  { id: 'usa', name: 'Amerika', shortName: 'Amerika', flag: FlagUSA, center: [38.0, -95.0], zoom: 4 },
 ];
 
 export default function MapTracker() {
@@ -626,26 +626,26 @@ export default function MapTracker() {
       {/* 1. Leaflet Map with Google Maps Tiles */}
       <div id="radar-map" ref={mapContainerRef} className="w-full h-full z-0 cursor-grab active:cursor-grabbing" />
 
-      {/* 2. Top Floating Header & Filter Bar (Organized & Responsive) */}
-      <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 z-20 flex flex-col space-y-2 pointer-events-none">
+      {/* 2. Top Floating Header & Filter Bar (Fully Responsive & Clean Hierarchy) */}
+      <div className="absolute top-2.5 left-2.5 right-2.5 sm:top-4 sm:left-4 sm:right-4 z-20 flex flex-col space-y-2 pointer-events-none">
         
         {/* Main Header Bar */}
-        <div className="flex items-center justify-between gap-2 pointer-events-none">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2 pointer-events-none w-full">
           
           {/* Left: Brand & Desktop Search */}
-          <div className="flex items-center space-x-2 pointer-events-auto">
+          <div className="flex items-center space-x-2 pointer-events-auto shrink-0">
             {/* Brand Badge */}
-            <div className="glass-clean rounded-xl px-3 sm:px-4 h-10 sm:h-11 flex items-center space-x-2 sm:space-x-2.5 shadow-sm">
-              <span className="relative flex h-2.5 w-2.5">
+            <div className="glass-clean rounded-xl px-2.5 sm:px-4 h-9 sm:h-11 flex items-center space-x-2 sm:space-x-2.5 shadow-sm">
+              <span className="relative flex h-2 sm:h-2.5 w-2 sm:w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2 sm:h-2.5 w-2 sm:w-2.5 bg-emerald-500"></span>
               </span>
               <span className="text-xs font-extrabold tracking-wide text-slate-800 uppercase whitespace-nowrap">
                 Global Radar
               </span>
             </div>
 
-            {/* Desktop Search Input */}
+            {/* Desktop Search Input (>= lg) */}
             <div className="relative hidden lg:block">
               <input
                 type="text"
@@ -667,11 +667,46 @@ export default function MapTracker() {
           </div>
 
           {/* Right: Controls & Toggles */}
-          <div className="flex items-center space-x-1.5 sm:space-x-2 pointer-events-auto">
-            {/* Mobile Search Toggle Button */}
+          <div className="flex items-center space-x-1.5 pointer-events-auto shrink-0">
+            {/* Desktop-only Entity Toggles (On mobile, these live in the filter rail below for maximum responsiveness) */}
+            <div className="hidden md:flex items-center space-x-1.5">
+              {/* Toggle Pesawat (Desktop) */}
+              <button
+                onClick={() => setShowPlanes(!showPlanes)}
+                className={`h-10 md:h-11 px-3 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm ${
+                  showPlanes
+                    ? 'bg-amber-500 text-white shadow-amber-500/25'
+                    : 'bg-white/95 text-slate-500 hover:bg-white hover:text-slate-700 border border-slate-200/90'
+                }`}
+              >
+                <Plane className="w-4 h-4 shrink-0" />
+                <span>Pesawat</span>
+                <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded-md font-bold ${showPlanes ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {planes.length}
+                </span>
+              </button>
+
+              {/* Toggle Kapal (Desktop) */}
+              <button
+                onClick={() => setShowShips(!showShips)}
+                className={`h-10 md:h-11 px-3 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm ${
+                  showShips
+                    ? 'bg-sky-600 text-white shadow-sky-600/25'
+                    : 'bg-white/95 text-slate-500 hover:bg-white hover:text-slate-700 border border-slate-200/90'
+                }`}
+              >
+                <Ship className="w-4 h-4 shrink-0" />
+                <span>Kapal</span>
+                <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded-md font-bold ${showShips ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {ships.length}
+                </span>
+              </button>
+            </div>
+
+            {/* Mobile Search Toggle Button (< lg) */}
             <button
               onClick={() => setShowMobileSearch(!showMobileSearch)}
-              className={`lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm ${
+              className={`lg:hidden w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center transition-all shadow-sm ${
                 showMobileSearch || searchQuery
                   ? 'bg-sky-600 text-white shadow-sky-600/25'
                   : 'glass-clean text-slate-600 hover:text-sky-600'
@@ -681,42 +716,10 @@ export default function MapTracker() {
               <Search className="w-4 h-4" />
             </button>
 
-            {/* Toggle Pesawat */}
-            <button
-              onClick={() => setShowPlanes(!showPlanes)}
-              className={`h-10 sm:h-11 px-2.5 sm:px-3.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 sm:space-x-2 transition-all shadow-sm ${
-                showPlanes
-                  ? 'bg-amber-500 text-white shadow-amber-500/25'
-                  : 'bg-white/95 text-slate-500 hover:bg-white hover:text-slate-700 border border-slate-200/90'
-              }`}
-            >
-              <Plane className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Pesawat</span>
-              <span className={`text-[11px] font-mono px-1.5 sm:px-2 py-0.5 rounded-md font-bold ${showPlanes ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {planes.length}
-              </span>
-            </button>
-
-            {/* Toggle Kapal */}
-            <button
-              onClick={() => setShowShips(!showShips)}
-              className={`h-10 sm:h-11 px-2.5 sm:px-3.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 sm:space-x-2 transition-all shadow-sm ${
-                showShips
-                  ? 'bg-sky-600 text-white shadow-sky-600/25'
-                  : 'bg-white/95 text-slate-500 hover:bg-white hover:text-slate-700 border border-slate-200/90'
-              }`}
-            >
-              <Ship className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Kapal</span>
-              <span className={`text-[11px] font-mono px-1.5 sm:px-2 py-0.5 rounded-md font-bold ${showShips ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {ships.length}
-              </span>
-            </button>
-
             {/* Google Maps Layer Switcher */}
             <button
               onClick={() => setTileMode(tileMode === 'roadmap' ? 'satellite' : 'roadmap')}
-              className="glass-clean w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-slate-600 hover:text-sky-600 flex items-center justify-center transition-colors shadow-sm"
+              className="glass-clean w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl text-slate-600 hover:text-sky-600 flex items-center justify-center transition-colors shadow-sm"
               title={tileMode === 'roadmap' ? 'Ganti ke Google Satelit Hybrid' : 'Ganti ke Google Maps Standar'}
             >
               <Layers className="w-4 h-4" />
@@ -726,7 +729,7 @@ export default function MapTracker() {
             <button
               onClick={refreshData}
               disabled={loading}
-              className="glass-clean w-10 h-10 sm:w-11 sm:h-11 rounded-xl text-slate-600 hover:text-sky-600 flex items-center justify-center transition-colors shadow-sm disabled:opacity-50"
+              className="glass-clean w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl text-slate-600 hover:text-sky-600 flex items-center justify-center transition-colors shadow-sm disabled:opacity-50"
               title="Segarkan Radar"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-sky-600' : ''}`} />
@@ -734,7 +737,7 @@ export default function MapTracker() {
           </div>
         </div>
 
-        {/* Mobile Search Input Bar (Dropdown below header on mobile) */}
+        {/* Mobile Search Input Bar (Smooth slide-down below header on mobile) */}
         {showMobileSearch && (
           <div className="lg:hidden pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="relative glass-clean rounded-xl p-1 shadow-md">
@@ -744,13 +747,13 @@ export default function MapTracker() {
                 placeholder="Cari Pesawat, Maskapai, Kapal, Bandara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent pl-9 pr-9 h-10 text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+                className="w-full bg-transparent pl-9 pr-9 h-9 sm:h-10 text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
               />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 sm:top-3" />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-2.5 sm:top-3 text-slate-400 hover:text-slate-600"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -759,9 +762,49 @@ export default function MapTracker() {
           </div>
         )}
 
-        {/* Regional Quick Jump Filter with Authentic SVG Flag Icons (Neat horizontal scroll on mobile & desktop) */}
-        <div className="pointer-events-auto">
-          <div className="glass-clean p-1 rounded-xl shadow-sm flex items-center space-x-1 overflow-x-auto no-scrollbar max-w-full">
+        {/* Filter Strip: Unified Entity Toggles + Regional Presets with Authentic Flag Icons */}
+        <div className="pointer-events-auto max-w-full">
+          <div className="glass-clean p-1 rounded-xl shadow-sm flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto no-scrollbar max-w-full">
+            
+            {/* Mobile Entity Toggles (Displayed prominently here on mobile for one-tap ergonomic access) */}
+            <div className="md:hidden flex items-center space-x-1 shrink-0">
+              {/* Toggle Pesawat (Mobile) */}
+              <button
+                onClick={() => setShowPlanes(!showPlanes)}
+                className={`h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all shrink-0 ${
+                  showPlanes
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-white/95 text-slate-600 hover:bg-white border border-slate-200/90'
+                }`}
+              >
+                <Plane className="w-3.5 h-3.5 shrink-0" />
+                <span>Pesawat</span>
+                <span className={`text-[10px] font-mono px-1 py-0.2 rounded font-bold ${showPlanes ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {planes.length}
+                </span>
+              </button>
+
+              {/* Toggle Kapal (Mobile) */}
+              <button
+                onClick={() => setShowShips(!showShips)}
+                className={`h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all shrink-0 ${
+                  showShips
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : 'bg-white/95 text-slate-600 hover:bg-white border border-slate-200/90'
+                }`}
+              >
+                <Ship className="w-3.5 h-3.5 shrink-0" />
+                <span>Kapal</span>
+                <span className={`text-[10px] font-mono px-1 py-0.2 rounded font-bold ${showShips ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {ships.length}
+                </span>
+              </button>
+
+              {/* Subtle Vertical Divider between Entity and Region Filters */}
+              <div className="h-4.5 w-px bg-slate-300/80 mx-0.5 shrink-0" />
+            </div>
+
+            {/* Regional Presets with Authentic Country Flags */}
             {REGION_PRESETS.map((preset) => {
               const FlagComponent = preset.flag;
               const isActive = activeRegion === preset.id;
@@ -769,14 +812,15 @@ export default function MapTracker() {
                 <button
                   key={preset.id}
                   onClick={() => handleJumpRegion(preset)}
-                  className={`h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold flex items-center space-x-1.5 sm:space-x-2 transition-all shrink-0 whitespace-nowrap ${
+                  className={`h-7 sm:h-8 px-2 sm:px-3 rounded-lg text-xs font-semibold flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0 whitespace-nowrap ${
                     isActive
                       ? 'bg-slate-900 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                   }`}
                 >
                   <FlagComponent className="w-4 h-2.5 sm:w-4.5 sm:h-3 shrink-0" />
-                  <span>{preset.name}</span>
+                  <span className="sm:hidden">{preset.shortName}</span>
+                  <span className="hidden sm:inline">{preset.name}</span>
                 </button>
               );
             })}
@@ -788,29 +832,27 @@ export default function MapTracker() {
       {currentSelectedData && (
         <div
           className={`fixed z-30 transition-all duration-300 ease-out pointer-events-auto
-            md:bottom-5 md:right-4 md:left-auto md:w-[430px] md:max-h-[85vh] md:rounded-xl md:shadow-2xl md:border md:border-slate-200/90
-            max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:rounded-t-2xl max-md:shadow-2xl max-md:border-t max-md:border-slate-200/90
+            /* Desktop (md: and above): Floating Card */
+            md:bottom-5 md:right-4 md:left-auto md:w-[430px] md:max-h-[85vh] md:rounded-2xl md:shadow-2xl md:border md:border-slate-200/90
+            /* Mobile (< md:): Floating Card Bottom Sheet with Sleek Rounded Corners on Left & Right */
+            max-md:bottom-3 max-md:left-3 max-md:right-3 max-md:rounded-[24px] max-md:shadow-2xl max-md:border max-md:border-slate-200/90
             ${mobileSheetExpanded
-              ? 'max-md:h-[90dvh] max-md:max-h-[90dvh]'
-              : 'max-md:h-[195px] max-md:max-h-[195px]'
+              ? 'max-md:h-[83dvh] max-md:max-h-[83dvh]'
+              : 'max-md:h-[185px] max-md:max-h-[185px]'
             }
           `}
         >
-          <div className="glass-clean-card h-full rounded-inherit flex flex-col overflow-hidden bg-white/95 backdrop-blur-xl">
+          <div className="glass-clean-card h-full rounded-[24px] flex flex-col overflow-hidden bg-white/95 backdrop-blur-xl">
             
-            {/* Mobile Pull Handle (Drag to expand/collapse or tap) */}
+            {/* Mobile Pull Handle Pill (Minimal sleek pill bar, no text) */}
             <div
-              className="md:hidden pt-2.5 pb-1 px-4 cursor-grab active:cursor-grabbing flex flex-col items-center select-none bg-slate-50/70 border-b border-slate-100"
+              className="md:hidden pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing flex justify-center items-center select-none bg-slate-50/80 border-b border-slate-100/90"
               onClick={() => setMobileSheetExpanded(!mobileSheetExpanded)}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <div className="w-12 h-1.5 bg-slate-300 rounded-full mb-1 hover:bg-slate-400 transition-colors"></div>
-              <div className="text-[10px] font-semibold text-slate-500 flex items-center space-x-1">
-                <span>{mobileSheetExpanded ? 'Tarik ke bawah atau ketuk untuk ciutkan' : 'Tarik ke atas untuk detail lengkap (90%)'}</span>
-                {mobileSheetExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronUp className="w-3.5 h-3.5 text-sky-600 animate-bounce" />}
-              </div>
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full hover:bg-slate-400 transition-colors"></div>
             </div>
 
             {/* Header: Official Vector Logo, Full Genuine Name & Close Button */}
@@ -888,8 +930,8 @@ export default function MapTracker() {
               </div>
             )}
 
-            {/* Scrollable Full Details (Visible on Desktop OR when Mobile Sheet is Expanded to 90%) */}
-            <div className={`flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 ${!mobileSheetExpanded ? 'hidden md:block' : 'block'}`}>
+            {/* Scrollable Full Details (Visible on Desktop OR when Mobile Sheet is Expanded) */}
+            <div className={`flex-1 overflow-y-auto p-4 sm:p-5 max-md:pb-10 space-y-4 ${!mobileSheetExpanded ? 'hidden md:block' : 'block'}`}>
               
               {/* Trajectory & Detailed Navigation Route Section */}
               <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 space-y-2.5 text-xs">
