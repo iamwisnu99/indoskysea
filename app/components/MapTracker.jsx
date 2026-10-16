@@ -432,7 +432,12 @@ export default function MapTracker() {
           s.operator?.toLowerCase().includes(q) ||
           String(s.mmsi).includes(q) ||
           s.type?.toLowerCase().includes(q) ||
-          s.destination?.name?.toLowerCase().includes(q)
+          s.destination?.name?.toLowerCase().includes(q) ||
+          s.destination?.city?.toLowerCase().includes(q) ||
+          s.origin?.name?.toLowerCase().includes(q) ||
+          s.origin?.city?.toLowerCase().includes(q) ||
+          s.destinationName?.toLowerCase().includes(q) ||
+          s.flagName?.toLowerCase().includes(q)
         );
       });
 

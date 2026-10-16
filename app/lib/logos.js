@@ -403,6 +403,92 @@ export const SHIP_LOGOS = {
     </svg>`,
   },
 
+  // 10. Royal Caribbean International (Cruise Ship)
+  ROYAL_CARIBBEAN: {
+    name: 'Royal Caribbean International',
+    color: '#00205b',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <rect width="100" height="100" rx="20" fill="#00205b"/>
+      <!-- Royal Caribbean Anchor & Crown -->
+      <path d="M35 32l15-10 15 10-5 12-20-4z" fill="#facc15"/>
+      <circle cx="50" cy="52" r="6" fill="#ffffff"/>
+      <path d="M50 44v32M32 64c10 12 26 12 36 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+    </svg>`,
+  },
+
+  // 11. Carnival Cruise Line
+  CARNIVAL: {
+    name: 'Carnival Cruise Line',
+    color: '#dc2626',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <rect width="100" height="100" rx="20" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+      <!-- Iconic Carnival Funnel Wing -->
+      <path d="M22 68l16-36h24l16 36-28-10-28 10z" fill="#dc2626"/>
+      <path d="M38 32l12-14 12 14z" fill="#0284c7"/>
+    </svg>`,
+  },
+
+  // 12. Cunard Line
+  CUNARD: {
+    name: 'Cunard Line',
+    color: '#b91c1c',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <circle cx="50" cy="50" r="46" fill="#7f1d1d"/>
+      <!-- Golden Cunard Lion & Globe -->
+      <circle cx="50" cy="46" r="14" fill="#facc15"/>
+      <path d="M42 34l8-8 8 8z" fill="#f59e0b"/>
+      <path d="M30 74c12 4 28 4 40 0" stroke="#facc15" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+  },
+
+  // 13. Princess Cruises
+  PRINCESS: {
+    name: 'Princess Cruises',
+    color: '#0284c7',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <circle cx="50" cy="50" r="46" fill="#0369a1"/>
+      <!-- Seawitch flowing waves -->
+      <path d="M25 60c15-18 35-18 50-5-10-12-25-15-38-6 10-6 24-4 34 4-12-6-26-4-36 7z" fill="#38bdf8"/>
+      <path d="M30 68c12-10 26-10 38-2-8-6-18-8-26-3z" fill="#ffffff"/>
+    </svg>`,
+  },
+
+  // 14. BAKAMLA RI (Badan Keamanan Laut)
+  BAKAMLA: {
+    name: 'Badan Keamanan Laut (BAKAMLA RI)',
+    color: '#c2410c',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <circle cx="50" cy="50" r="46" fill="#9a3412" stroke="#fbbf24" stroke-width="3"/>
+      <!-- Garuda anchor crest -->
+      <polygon points="50,22 62,36 38,36" fill="#fbbf24"/>
+      <path d="M50 36v38M34 58c10 10 22 10 32 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+    </svg>`,
+  },
+
+  // 15. US Navy
+  USNAVY: {
+    name: 'United States Navy',
+    color: '#0f172a',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <circle cx="50" cy="50" r="46" fill="#0f172a" stroke="#facc15" stroke-width="3"/>
+      <circle cx="50" cy="50" r="32" fill="none" stroke="#facc15" stroke-width="2"/>
+      <polygon points="50,28 55,42 70,42 58,50 62,64 50,56 38,64 42,50 30,42 45,42" fill="#ffffff"/>
+    </svg>`,
+  },
+
+  // 16. Luxury Private Superyacht
+  YACHT: {
+    name: 'Private Superyacht',
+    color: '#0f172a',
+    svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+      <rect width="100" height="100" rx="20" fill="#1e293b"/>
+      <!-- Sleek Superyacht Profile -->
+      <path d="M16 64l12-14h36l20 14H16z" fill="#f8fafc"/>
+      <path d="M36 50l8-10h18l6 10H36z" fill="#38bdf8"/>
+      <line x1="20" y1="72" x2="80" y2="72" stroke="#facc15" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+  },
+
   // Default fallback ship
   DEFAULT: {
     name: 'Armada Maritim',
@@ -454,15 +540,31 @@ export function getShipLogo(operatorName, shipName) {
   const op = (operatorName || '').toLowerCase();
   const name = (shipName || '').toLowerCase();
 
+  // Cruise Lines (Kapal Pesiar)
+  if (op.includes('royal caribbean') || name.includes('of the seas') || name.includes('icon of the seas')) return SHIP_LOGOS.ROYAL_CARIBBEAN;
+  if (op.includes('carnival') || name.includes('carnival')) return SHIP_LOGOS.CARNIVAL;
+  if (op.includes('cunard') || name.includes('queen mary') || name.includes('queen victoria')) return SHIP_LOGOS.CUNARD;
+  if (op.includes('princess') || name.includes('princess')) return SHIP_LOGOS.PRINCESS;
+
+  // Passenger & Ferries
   if (op.includes('pelni') || name.includes('pelni') || name.startsWith('km ')) return SHIP_LOGOS.PELNI;
   if (op.includes('asdp') || name.includes('asdp') || name.startsWith('kmp ')) return SHIP_LOGOS.ASDP;
+
+  // Tankers & Cargo
   if (op.includes('pertamina') || name.includes('pertamina')) return SHIP_LOGOS.PERTAMINA;
   if (op.includes('maersk') || name.includes('maersk')) return SHIP_LOGOS.MAERSK;
-  if (op.includes('evergreen') || name.includes('ever given') || name.includes('ever ')) return SHIP_LOGOS.EVERGREEN;
+  if (op.includes('evergreen') || name.includes('ever given') || name.includes('ever ace') || name.includes('ever ')) return SHIP_LOGOS.EVERGREEN;
   if (op.includes('msc') || name.includes('msc ')) return SHIP_LOGOS.MSC;
   if (op.includes('cma cgm') || name.includes('cma ')) return SHIP_LOGOS.CMACGM;
   if (op.includes('meratus') || name.includes('meratus')) return SHIP_LOGOS.MERATUS;
+
+  // Defense, Law Enforcement & Navy
+  if (op.includes('bakamla') || name.startsWith('kn ')) return SHIP_LOGOS.BAKAMLA;
   if (op.includes('tni') || name.startsWith('kri ')) return SHIP_LOGOS.TNI_AL;
+  if (op.includes('us navy') || name.startsWith('uss ')) return SHIP_LOGOS.USNAVY;
+
+  // Superyachts & Luxury Private
+  if (op.includes('yacht') || name.includes('superyacht') || name.includes('yacht') || name.includes('azzam') || name.includes('eclipse') || name.includes('dilbar')) return SHIP_LOGOS.YACHT;
 
   return SHIP_LOGOS.DEFAULT;
 }

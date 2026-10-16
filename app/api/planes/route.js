@@ -253,6 +253,22 @@ const AIRPORT_COORDINATES = {
     lat: 37.6213,
     lon: -122.3790
   },
+  SYD: {
+    code: 'SYD',
+    city: 'Sydney',
+    country: 'Australia',
+    name: 'Bandara Internasional Kingsford Smith Sydney',
+    lat: -33.9461,
+    lon: 151.1772
+  },
+  JED: {
+    code: 'JED',
+    city: 'Jeddah',
+    country: 'Arab Saudi',
+    name: 'Bandara Internasional King Abdulaziz',
+    lat: 21.6796,
+    lon: 39.1565
+  },
 };
 
 // Global Active Fleet
@@ -437,6 +453,60 @@ const WORLDWIDE_ACTIVE_FLEET = [
     velocity: 485, heading: 275, verticalRate: 0.0, onGround: false, squawk: '4410',
     origin: AIRPORT_COORDINATES.LAX, destination: AIRPORT_COORDINATES.HND,
   },
+
+  // 🇮🇩 Garuda Indonesia Long-Haul Umrah / Middle East
+  {
+    id: '8a0980', callsign: 'GIA980', airlineCode: 'GIA', airlineName: 'Garuda Indonesia',
+    flightNumber: 'GA-980', aircraftModel: 'Boeing 777-300ER', registration: 'PK-GIK',
+    country: 'Indonesia', latitude: 15.4500, longitude: 52.8500, altitude: 10668, altitudeFeet: 35000,
+    velocity: 475, heading: 295, verticalRate: 0.0, onGround: false, squawk: '7214',
+    origin: AIRPORT_COORDINATES.CGK, destination: AIRPORT_COORDINATES.JED,
+  },
+
+  // 🇦🇺 Qantas Airways Kangaroo Route
+  {
+    id: '7c0001', callsign: 'QFA1', airlineCode: 'QFA', airlineName: 'Qantas Airways',
+    flightNumber: 'QF-1', aircraftModel: 'Airbus A380-800', registration: 'VH-OQA',
+    country: 'Australia', latitude: -12.4500, longitude: 125.8500, altitude: 11582, altitudeFeet: 38000,
+    velocity: 495, heading: 315, verticalRate: 0.0, onGround: false, squawk: '6201',
+    origin: AIRPORT_COORDINATES.SYD, destination: AIRPORT_COORDINATES.LHR,
+  },
+
+  // 🇹🇷 Turkish Airlines Eurasia Hub
+  {
+    id: '4b8056', callsign: 'THY56', airlineCode: 'THY', airlineName: 'Turkish Airlines',
+    flightNumber: 'TK-56', aircraftModel: 'Boeing 777-300ER', registration: 'TC-LJE',
+    country: 'Turkey', latitude: 22.8500, longitude: 78.4500, altitude: 10972, altitudeFeet: 36000,
+    velocity: 485, heading: 125, verticalRate: 0.0, onGround: false, squawk: '4310',
+    origin: AIRPORT_COORDINATES.IST, destination: AIRPORT_COORDINATES.CGK,
+  },
+
+  // 🇫🇷 Air France Transatlantic
+  {
+    id: '394022', callsign: 'AFR022', airlineCode: 'AFR', airlineName: 'Air France',
+    flightNumber: 'AF-22', aircraftModel: 'Airbus A350-900', registration: 'F-HTYA',
+    country: 'France', latitude: 48.8500, longitude: -45.2000, altitude: 11887, altitudeFeet: 39000,
+    velocity: 480, heading: 260, verticalRate: 0.0, onGround: false, squawk: '5211',
+    origin: AIRPORT_COORDINATES.CDG, destination: AIRPORT_COORDINATES.JFK,
+  },
+
+  // 🇮🇩 TNI Angkatan Udara (Militer Transportasi)
+  {
+    id: '8a7001', callsign: 'TNI01', airlineCode: 'TNI', airlineName: 'TNI Angkatan Udara (Skadron Udara 31)',
+    flightNumber: 'A-1340', aircraftModel: 'Lockheed Martin C-130J-30 Super Hercules', registration: 'A-1340',
+    country: 'Indonesia', latitude: -5.8500, longitude: 114.2500, altitude: 7924, altitudeFeet: 26000,
+    velocity: 340, heading: 75, verticalRate: 0.0, onGround: false, squawk: '7700',
+    origin: AIRPORT_COORDINATES.HLP, destination: AIRPORT_COORDINATES.UPG,
+  },
+
+  // ✈️ Swasta / Private Corporate Super Jet
+  {
+    id: 'a99777', callsign: 'N777XX', airlineCode: 'DEFAULT', airlineName: 'Global Jet Executive Charter',
+    flightNumber: 'PJ-777', aircraftModel: 'Gulfstream G650ER Luxury Business Jet', registration: 'N777XX',
+    country: 'United States', latitude: 18.2500, longitude: 74.8500, altitude: 13106, altitudeFeet: 43000,
+    velocity: 520, heading: 120, verticalRate: 0.0, onGround: false, squawk: '1200',
+    origin: AIRPORT_COORDINATES.DXB, destination: AIRPORT_COORDINATES.SIN,
+  },
 ];
 
 function generateFlightTrajectory(origin, currentLat, currentLon, destination) {
@@ -472,8 +542,9 @@ export async function GET() {
   const now = Date.now();
   const state = globalThis._openskyGlobalState;
 
-  if (state.flights.size === 0) {
-    WORLDWIDE_ACTIVE_FLEET.forEach((f) => {
+  // Ensure all worldwide active flights are seeded in state
+  WORLDWIDE_ACTIVE_FLEET.forEach((f) => {
+    if (!state.flights.has(f.id)) {
       const { pastTrail, futureTrail } = generateFlightTrajectory(f.origin, f.latitude, f.longitude, f.destination);
       state.flights.set(f.id, {
         ...f,
@@ -483,8 +554,8 @@ export async function GET() {
         futureTrail,
         lastSeen: now,
       });
-    });
-  }
+    }
+  });
 
   const activeFlights = advanceWorldwideKinematics(Array.from(state.flights.values()), now);
 
