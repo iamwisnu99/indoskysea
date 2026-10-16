@@ -22,6 +22,26 @@ body {
   height: 100%;
   background: #eef2f6 !important;
   font-family: inherit;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* GPU Hardware Acceleration for Map Layer Panes */
+.leaflet-marker-pane {
+  will-change: transform;
+  contain: layout style;
+}
+
+.leaflet-tile-pane {
+  contain: strict;
+}
+
+.custom-plane-icon,
+.custom-ship-icon {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Crisp Clean Leaflet Zoom Controls */
@@ -73,6 +93,8 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
   transition: transform 0.25s ease-out;
 }
 
@@ -130,6 +152,18 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.12), 0 10px 15px -3px rgba(15, 23, 42, 0.06);
+}
+
+/* Mobile & Mid-range GPU optimization: lower blur overhead to preserve 60fps */
+@media (max-width: 768px) {
+  .glass-clean {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .glass-clean-card {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
 /* Subtle Ping for Selected Aircraft */

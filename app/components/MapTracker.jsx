@@ -71,6 +71,7 @@ export default function MapTracker() {
     dashedLine: null,
     originMarker: null,
     destMarker: null,
+    entityId: null,
   });
 
   // Data states
@@ -160,7 +161,7 @@ export default function MapTracker() {
 
       const L = (await import('leaflet')).default;
 
-      // Default Indonesia View
+      // Default Indonesia View with Canvas rendering & mid-range GPU optimization
       const map = L.map(mapContainerRef.current, {
         center: [-2.5489, 118.0149],
         zoom: 4.8,
@@ -169,6 +170,7 @@ export default function MapTracker() {
         minZoom: 2,
         maxZoom: 19,
         worldCopyJump: true,
+        preferCanvas: true,
       });
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -178,6 +180,9 @@ export default function MapTracker() {
         attribution: tileConfig.attribution,
         subdomains: tileConfig.subdomains,
         maxZoom: tileConfig.maxZoom,
+        keepBuffer: 2,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
       }).addTo(map);
 
       tileLayerRef.current = tileLayer;
@@ -215,6 +220,9 @@ export default function MapTracker() {
         attribution: tileConfig.attribution,
         subdomains: tileConfig.subdomains,
         maxZoom: tileConfig.maxZoom,
+        keepBuffer: 2,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
       }).addTo(mapInstanceRef.current);
     }
 
@@ -253,17 +261,40 @@ export default function MapTracker() {
     setLoading(false);
   }, [fetchPlanes, fetchShips]);
 
-  // Initial load and periodic server sync
+  // Initial load and periodic server sync (auto-throttled when page is hidden/tab is inactive)
   useEffect(() => {
     refreshData();
-    const serverSyncInterval = setInterval(refreshData, 10000);
-    return () => clearInterval(serverSyncInterval);
+    const serverSyncInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        refreshData();
+      }
+    }, 10000);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        refreshData();
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    return () => {
+      clearInterval(serverSyncInterval);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
   }, [refreshData]);
 
   // Client-Side Real-Time Dead Reckoning Engine (Every 1 second):
   // Continuously advances plane and ship positions smoothly worldwide
   useEffect(() => {
     const kinematicTicker = setInterval(() => {
+      // Pause kinematic calculation when tab is hidden to save mobile CPU/battery
+      if (typeof document !== 'undefined' && document.hidden) return;
+
       // 1. Advance aircraft in real-time
       setPlanes((prevPlanes) =>
         prevPlanes.map((p) => {
@@ -352,34 +383,54 @@ export default function MapTracker() {
         const heading = plane.heading || 0;
         const isSelected = selectedEntity?.type === 'plane' && selectedEntity?.id === plane.id;
 
-        const iconHtml = `
-          <div class="marker-plane-wrapper group" style="width: 34px; height: 34px;">
-            ${isSelected ? '<div class="absolute inset-0 rounded-full bg-amber-500/40 ping-selected pointer-events-none"></div>' : ''}
-            <div class="relative flex items-center justify-center w-8 h-8 transition-transform duration-300"
-                 style="transform: rotate(${heading}deg);">
-              <svg viewBox="0 0 24 24" class="w-6 h-6 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] hover:scale-125 transition-transform" fill="currentColor">
-                <path fill="#f59e0b" stroke="#0f172a" stroke-width="0.8" stroke-linejoin="round" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-              </svg>
+        const buildPlaneIcon = () => {
+          const iconHtml = `
+            <div class="marker-plane-wrapper group" style="width: 34px; height: 34px;">
+              ${isSelected ? '<div class="absolute inset-0 rounded-full bg-amber-500/40 ping-selected pointer-events-none"></div>' : ''}
+              <div class="marker-rotator relative flex items-center justify-center w-8 h-8 transition-transform duration-300"
+                   style="transform: rotate(${heading}deg);">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] hover:scale-125 transition-transform" fill="currentColor">
+                  <path fill="#f59e0b" stroke="#0f172a" stroke-width="0.8" stroke-linejoin="round" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                </svg>
+              </div>
+              <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-2 py-0.5 text-[9px] font-sans font-bold bg-white text-slate-800 rounded-md shadow border border-slate-200 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                ${plane.realName || plane.callsign}
+              </div>
             </div>
-            <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-2 py-0.5 text-[9px] font-sans font-bold bg-white text-slate-800 rounded-md shadow border border-slate-200 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              ${plane.realName || plane.callsign}
-            </div>
-          </div>
-        `;
-
-        const planeIcon = L.divIcon({
-          html: iconHtml,
-          className: 'custom-plane-icon',
-          iconSize: [34, 34],
-          iconAnchor: [17, 17],
-        });
+          `;
+          return L.divIcon({
+            html: iconHtml,
+            className: 'custom-plane-icon',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+          });
+        };
 
         if (existing.has(plane.id)) {
           const marker = existing.get(plane.id);
           marker.setLatLng([plane.latitude, plane.longitude]);
-          marker.setIcon(planeIcon);
+
+          // Only reconstruct DOM node if selection ring status toggled
+          if (marker._isSelected !== isSelected) {
+            marker._isSelected = isSelected;
+            marker._heading = heading;
+            marker.setIcon(buildPlaneIcon());
+          } else {
+            // Ultra-lightweight GPU rotation: in-place CSS transform without recreating DOM nodes
+            const el = marker.getElement();
+            if (el && marker._heading !== heading) {
+              const rotator = el.querySelector('.marker-rotator');
+              if (rotator) {
+                rotator.style.transform = `rotate(${heading}deg)`;
+              }
+              marker._heading = heading;
+            }
+          }
         } else {
+          const planeIcon = buildPlaneIcon();
           const marker = L.marker([plane.latitude, plane.longitude], { icon: planeIcon }).addTo(map);
+          marker._isSelected = isSelected;
+          marker._heading = heading;
 
           marker.on('click', () => {
             setSelectedEntity({ type: 'plane', id: plane.id });
@@ -446,34 +497,54 @@ export default function MapTracker() {
         const heading = ship.heading || ship.cog || 0;
         const isSelected = selectedEntity?.type === 'ship' && selectedEntity?.id === ship.mmsi;
 
-        const iconHtml = `
-          <div class="marker-ship-wrapper group" style="width: 28px; height: 28px;">
-            ${isSelected ? '<div class="absolute inset-0 rounded-full bg-cyan-500/40 ping-selected pointer-events-none"></div>' : ''}
-            <div class="relative flex items-center justify-center w-7 h-7 transition-transform duration-300"
-                 style="transform: rotate(${heading}deg);">
-              <svg viewBox="0 0 24 24" class="w-5 h-5 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] hover:scale-125 transition-transform" fill="currentColor">
-                <path fill="#0284c7" stroke="#0f172a" stroke-width="0.8" stroke-linejoin="round" d="M12 2L6 8v11a2 2 0 002 2h8a2 2 0 002-2V8l-6-6zm0 3.5l3.5 3.5h-7L12 5.5zM8 11h8v7H8v-7z"/>
-              </svg>
+        const buildShipIcon = () => {
+          const iconHtml = `
+            <div class="marker-ship-wrapper group" style="width: 28px; height: 28px;">
+              ${isSelected ? '<div class="absolute inset-0 rounded-full bg-cyan-500/40 ping-selected pointer-events-none"></div>' : ''}
+              <div class="marker-rotator relative flex items-center justify-center w-7 h-7 transition-transform duration-300"
+                   style="transform: rotate(${heading}deg);">
+                <svg viewBox="0 0 24 24" class="w-5 h-5 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] hover:scale-125 transition-transform" fill="currentColor">
+                  <path fill="#0284c7" stroke="#0f172a" stroke-width="0.8" stroke-linejoin="round" d="M12 2L6 8v11a2 2 0 002 2h8a2 2 0 002-2V8l-6-6zm0 3.5l3.5 3.5h-7L12 5.5zM8 11h8v7H8v-7z"/>
+                </svg>
+              </div>
+              <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-2 py-0.5 text-[9px] font-sans font-bold bg-white text-slate-800 rounded-md shadow border border-slate-200 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                ${ship.fullName || ship.name}
+              </div>
             </div>
-            <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-2 py-0.5 text-[9px] font-sans font-bold bg-white text-slate-800 rounded-md shadow border border-slate-200 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              ${ship.fullName || ship.name}
-            </div>
-          </div>
-        `;
-
-        const shipIcon = L.divIcon({
-          html: iconHtml,
-          className: 'custom-ship-icon',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
-        });
+          `;
+          return L.divIcon({
+            html: iconHtml,
+            className: 'custom-ship-icon',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+          });
+        };
 
         if (existing.has(ship.mmsi)) {
           const marker = existing.get(ship.mmsi);
           marker.setLatLng([ship.latitude, ship.longitude]);
-          marker.setIcon(shipIcon);
+
+          // Only reconstruct DOM node if selection ring status toggled
+          if (marker._isSelected !== isSelected) {
+            marker._isSelected = isSelected;
+            marker._heading = heading;
+            marker.setIcon(buildShipIcon());
+          } else {
+            // Ultra-lightweight GPU rotation: in-place CSS transform without recreating DOM nodes
+            const el = marker.getElement();
+            if (el && marker._heading !== heading) {
+              const rotator = el.querySelector('.marker-rotator');
+              if (rotator) {
+                rotator.style.transform = `rotate(${heading}deg)`;
+              }
+              marker._heading = heading;
+            }
+          }
         } else {
+          const shipIcon = buildShipIcon();
           const marker = L.marker([ship.latitude, ship.longitude], { icon: shipIcon }).addTo(map);
+          marker._isSelected = isSelected;
+          marker._heading = heading;
 
           marker.on('click', () => {
             setSelectedEntity({ type: 'ship', id: ship.mmsi });
@@ -517,16 +588,37 @@ export default function MapTracker() {
       const map = mapInstanceRef.current;
       const ref = trajectoryLayersRef.current;
 
-      // Clean up previous trajectory lines and waypoint markers
+      if (!currentSelectedData) {
+        if (ref.solidLine) { map.removeLayer(ref.solidLine); ref.solidLine = null; }
+        if (ref.dashedLine) { map.removeLayer(ref.dashedLine); ref.dashedLine = null; }
+        if (ref.originMarker) { map.removeLayer(ref.originMarker); ref.originMarker = null; }
+        if (ref.destMarker) { map.removeLayer(ref.destMarker); ref.destMarker = null; }
+        ref.entityId = null;
+        return;
+      }
+
+      const isPlane = selectedEntity.type === 'plane';
+      const lineColor = isPlane ? '#f59e0b' : '#0284c7';
+      const isSameEntity = ref.entityId === selectedEntity?.id;
+
+      if (isSameEntity) {
+        // Fast-path: Update existing polylines in-place (Zero DOM allocations)
+        if (ref.solidLine && Array.isArray(currentSelectedData.pastTrail)) {
+          ref.solidLine.setLatLngs(currentSelectedData.pastTrail);
+        }
+        if (ref.dashedLine && Array.isArray(currentSelectedData.futureTrail)) {
+          ref.dashedLine.setLatLngs(currentSelectedData.futureTrail);
+        }
+        return;
+      }
+
+      // Entity selection changed: Clean up previous trajectory and create new pins
       if (ref.solidLine) { map.removeLayer(ref.solidLine); ref.solidLine = null; }
       if (ref.dashedLine) { map.removeLayer(ref.dashedLine); ref.dashedLine = null; }
       if (ref.originMarker) { map.removeLayer(ref.originMarker); ref.originMarker = null; }
       if (ref.destMarker) { map.removeLayer(ref.destMarker); ref.destMarker = null; }
 
-      if (!currentSelectedData) return;
-
-      const isPlane = selectedEntity.type === 'plane';
-      const lineColor = isPlane ? '#f59e0b' : '#0284c7';
+      ref.entityId = selectedEntity?.id;
 
       // 1. Solid Line for path already traversed (Origin -> Current position)
       if (Array.isArray(currentSelectedData.pastTrail) && currentSelectedData.pastTrail.length > 0) {
@@ -673,8 +765,8 @@ export default function MapTracker() {
             {/* Brand Logo & Name */}
             <div
               onClick={() => {
-                handlePresetChange('ID');
-                setSelectedTarget(null);
+                handleJumpRegion(REGION_PRESETS[0]);
+                setSelectedEntity(null);
               }}
               className="glass-clean rounded-xl px-2.5 sm:px-3.5 h-9 sm:h-11 flex items-center space-x-2 sm:space-x-2.5 shadow-sm cursor-pointer hover:bg-white/95 active:scale-95 transition-all select-none"
               title="IndoSkySea - Klik untuk reset ke tampilan Indonesia"
@@ -1171,27 +1263,6 @@ export default function MapTracker() {
                   </div>
 
                   {/* Technical Specifications */}
-                  <div className="text-xs text-slate-600 divide-y divide-slate-100">
-                    <div className="flex justify-between py-2">
-                      <span className="text-slate-400">Kode Registrasi (Ekor):</span>
-                      <span className="font-mono font-semibold text-slate-800">{currentSelectedData.registration || 'AIRCRAFT'}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-slate-400">Model Pesawat:</span>
-                      <span className="font-semibold text-slate-800">{currentSelectedData.aircraftModel}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-slate-400">Squawk Transponder:</span>
-                      <span className="font-mono font-semibold text-slate-800">{currentSelectedData.squawk || '1200'}</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-slate-400">Posisi Koordinat Real-Time:</span>
-                      <span className="font-mono text-slate-700">
-                        {currentSelectedData.latitude.toFixed(4)}, {currentSelectedData.longitude.toFixed(4)}
-                      </span>
-                    </div>
-                  </div>
-
                   <div className="text-xs text-slate-600 divide-y divide-slate-100">
                     <div className="flex justify-between py-2">
                       <span className="text-slate-400">Kode Registrasi (Ekor):</span>
