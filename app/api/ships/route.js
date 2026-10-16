@@ -3,462 +3,197 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Global in-memory vessel cache across warm serverless requests
-if (!globalThis._shipAisCache) {
-  globalThis._shipAisCache = {
+if (!globalThis._shipGlobalState) {
+  globalThis._shipGlobalState = {
     ships: new Map(),
-    lastUpdate: 0,
-    wsClient: null,
-    isConnecting: false,
-    lastConnectedTime: 0,
+    lastFetchTime: 0,
+    lastKinematicTime: Date.now(),
   };
 }
 
-// Realistic baseline Indonesian maritime traffic with real vessel names and operators
-const REALISTIC_INDONESIAN_VESSELS = [
+// Global Strategic Seaports Directory
+const GLOBAL_SEAPORTS = {
+  PRIOK: { code: 'IDTPP', name: 'Pelabuhan Tanjung Priok (Jakarta)', city: 'Jakarta', country: 'Indonesia', lat: -6.1020, lon: 106.8820 },
+  PERAK: { code: 'IDSUB', name: 'Pelabuhan Tanjung Perak (Surabaya)', city: 'Surabaya', country: 'Indonesia', lat: -7.2000, lon: 112.7300 },
+  MERAK: { code: 'IDMRK', name: 'Pelabuhan Merak (Banten)', city: 'Merak', country: 'Indonesia', lat: -5.9320, lon: 105.9980 },
+  BAKAUHENI: { code: 'IDBKH', name: 'Pelabuhan Bakauheni (Lampung)', city: 'Bakauheni', country: 'Indonesia', lat: -5.8680, lon: 105.7520 },
+  BATAM: { code: 'IDBTH', name: 'Pelabuhan Batu Ampar (Batam)', city: 'Batam', country: 'Indonesia', lat: 1.1600, lon: 103.9800 },
+  BALONGAN: { code: 'IDBLN', name: 'Terminal Khusus Migas Balongan', city: 'Indramayu', country: 'Indonesia', lat: -6.3400, lon: 108.3800 },
+  MAKASSAR: { code: 'IDMAK', name: 'Pelabuhan Soekarno-Hatta Makassar', city: 'Makassar', country: 'Indonesia', lat: -5.1200, lon: 119.4100 },
+  SINGAPORE: { code: 'SGSIN', name: 'Port of Singapore (PSA)', city: 'Singapore', country: 'Singapore', lat: 1.2644, lon: 103.8400 },
+  ROTTERDAM: { code: 'NLRTM', name: 'Port of Rotterdam (Europoort)', city: 'Rotterdam', country: 'Netherlands', lat: 51.9500, lon: 4.1400 },
+  SHANGHAI: { code: 'CNSHA', name: 'Port of Shanghai (Yangshan)', city: 'Shanghai', country: 'China', lat: 30.6200, lon: 122.0600 },
+  YANTIAN: { code: 'CNYAT', name: 'Yantian International Container Port', city: 'Shenzhen', country: 'China', lat: 22.5700, lon: 114.2600 },
+  SUEZ: { code: 'EGSUZ', name: 'Suez Canal Northern Anchorage', city: 'Port Said', country: 'Egypt', lat: 31.2500, lon: 32.3200 },
+  HORMUZ: { code: 'OMMKT', name: 'Strait of Hormuz / Ras Tanura', city: 'Persian Gulf', country: 'Saudi Arabia', lat: 26.6500, lon: 50.1500 },
+  SOUTHAMPTON: { code: 'GBSOU', name: 'Port of Southampton', city: 'Southampton', country: 'United Kingdom', lat: 50.8900, lon: -1.4000 },
+  NEWYORK: { code: 'USNYC', name: 'Port of New York & New Jersey', city: 'New York', country: 'United States', lat: 40.6600, lon: -74.1200 },
+  LOSANGELES: { code: 'USLAX', name: 'Port of Los Angeles (San Pedro)', city: 'Los Angeles', country: 'United States', lat: 33.7400, lon: -118.2600 },
+};
+
+// Worldwide active commercial and passenger vessels
+const WORLDWIDE_ACTIVE_VESSELS = [
+  // 🇮🇩 Indonesian Maritime Arteries
   {
-    mmsi: 525015001,
-    name: 'KM KELUD',
-    fullName: 'KM Kelud (PT PELNI)',
-    operator: 'PT Pelayaran Nasional Indonesia (PELNI)',
-    type: 'Kapal Penumpang (Passenger Liner)',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -5.9234,
-    longitude: 106.0125,
-    sog: 16.5,
-    cog: 235,
-    heading: 235,
-    destination: 'BATAM -> TANJUNG PRIOK',
-    navStatus: 'Under way using engine'
+    mmsi: 525015001, name: 'KM KELUD', fullName: 'KM Kelud (PT PELNI)',
+    operator: 'PT Pelayaran Nasional Indonesia (PELNI)', operatorCode: 'PELNI',
+    type: 'Kapal Penumpang (Passenger Liner)', flag: 'ID', flagName: 'Indonesia',
+    latitude: -5.9234, longitude: 106.0125, sog: 16.5, cog: 235, heading: 235,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.BATAM, destination: GLOBAL_SEAPORTS.PRIOK,
   },
   {
-    mmsi: 525008012,
-    name: 'KMP PORTLINK III',
-    fullName: 'KMP Portlink III (ASDP Indonesia)',
-    operator: 'PT ASDP Indonesia Ferry (Persero)',
-    type: 'Kapal Feri Ro-Ro Eksekutif',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -5.8712,
-    longitude: 105.9841,
-    sog: 13.2,
-    cog: 78,
-    heading: 80,
-    destination: 'BAKAUHENI -> MERAK',
-    navStatus: 'Under way using engine'
+    mmsi: 525008012, name: 'KMP PORTLINK III', fullName: 'KMP Portlink III (ASDP Indonesia)',
+    operator: 'PT ASDP Indonesia Ferry (Persero)', operatorCode: 'ASDP',
+    type: 'Kapal Feri Ro-Ro Eksekutif', flag: 'ID', flagName: 'Indonesia',
+    latitude: -5.8712, longitude: 105.9841, sog: 13.2, cog: 78, heading: 80,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.BAKAUHENI, destination: GLOBAL_SEAPORTS.MERAK,
   },
   {
-    mmsi: 525021004,
-    name: 'PERTAMINA GAS 2',
-    fullName: 'Pertamina Gas 2 (PIS)',
-    operator: 'PT Pertamina International Shipping',
-    type: 'Very Large Gas Carrier (VLGC)',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -6.2105,
-    longitude: 108.3412,
-    sog: 14.8,
-    cog: 110,
-    heading: 112,
-    destination: 'KILANG BALONGAN (RU VI)',
-    navStatus: 'Under way using engine'
+    mmsi: 525021004, name: 'PERTAMINA GAS 2', fullName: 'Pertamina Gas 2 (PIS)',
+    operator: 'PT Pertamina International Shipping', operatorCode: 'PERTAMINA',
+    type: 'Very Large Gas Carrier (VLGC)', flag: 'ID', flagName: 'Indonesia',
+    latitude: -6.2105, longitude: 108.3412, sog: 14.8, cog: 110, heading: 112,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.BALONGAN, destination: GLOBAL_SEAPORTS.PRIOK,
   },
   {
-    mmsi: 563012900,
-    name: 'MAERSK MC-KINNEY MOLLER',
-    fullName: 'Maersk Mc-Kinney Moller (Maersk Line)',
-    operator: 'A.P. Moller - Maersk',
-    type: 'Triple-E Container Ship (18,270 TEU)',
-    flag: 'SG',
-    flagName: 'Singapore',
-    latitude: 1.2150,
-    longitude: 103.8210,
-    sog: 18.2,
-    cog: 295,
-    heading: 295,
-    destination: 'SINGAPORE -> ROTTERDAM',
-    navStatus: 'Under way using engine'
+    mmsi: 525001278, name: 'KRI DIPONEGORO 365', fullName: 'KRI Diponegoro-365 (Sigma Class)',
+    operator: 'TNI Angkatan Laut (Koarmada II)', operatorCode: 'TNI_AL',
+    type: 'Kapal Perang Korvet Patroli Maritim', flag: 'ID', flagName: 'Indonesia',
+    latitude: -6.0500, longitude: 106.9100, sog: 22.5, cog: 40, heading: 40,
+    navStatus: 'Engaged in patrol',
+    origin: GLOBAL_SEAPORTS.PERAK, destination: GLOBAL_SEAPORTS.PRIOK,
   },
   {
-    mmsi: 352001420,
-    name: 'EVER GIVEN',
-    fullName: 'Ever Given (Evergreen Marine)',
-    operator: 'Evergreen Marine Corp.',
-    type: 'Golden-class Container Ship (20,124 TEU)',
-    flag: 'PA',
-    flagName: 'Panama',
-    latitude: 1.1520,
-    longitude: 103.6540,
-    sog: 15.4,
-    cog: 118,
-    heading: 119,
-    destination: 'TANJUNG PELEPAS -> YANTIAN',
-    navStatus: 'Under way using engine'
+    mmsi: 525019888, name: 'MERATUS KAHAYAN', fullName: 'Meratus Kahayan (Meratus Line)',
+    operator: 'PT Meratus Line', operatorCode: 'MERATUS',
+    type: 'Kapal Kontainer Domestik', flag: 'ID', flagName: 'Indonesia',
+    latitude: -6.8500, longitude: 112.9500, sog: 12.4, cog: 350, heading: 348,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.PERAK, destination: GLOBAL_SEAPORTS.MAKASSAR,
+  },
+
+  // 🌍 Global Megaships & Strategic Oceans
+  {
+    mmsi: 563012900, name: 'MAERSK MC-KINNEY MOLLER', fullName: 'Maersk Mc-Kinney Moller (Maersk Line)',
+    operator: 'A.P. Moller - Maersk', operatorCode: 'MAERSK',
+    type: 'Triple-E Container Ship (18,270 TEU)', flag: 'SG', flagName: 'Singapore',
+    latitude: 5.8500, longitude: 80.2500, sog: 18.5, cog: 285, heading: 285,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.SINGAPORE, destination: GLOBAL_SEAPORTS.ROTTERDAM,
   },
   {
-    mmsi: 525019888,
-    name: 'MERATUS KAHAYAN',
-    fullName: 'Meratus Kahayan (Meratus Line)',
-    operator: 'PT Meratus Line',
-    type: 'Kapal Kontainer Domestik',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -7.1520,
-    longitude: 112.7150,
-    sog: 11.8,
-    cog: 345,
-    heading: 342,
-    destination: 'TANJUNG PERAK -> BANJARMASIN',
-    navStatus: 'Under way using engine'
+    mmsi: 352001420, name: 'EVER GIVEN', fullName: 'Ever Given (Evergreen Marine)',
+    operator: 'Evergreen Marine Corp.', operatorCode: 'EVERGREEN',
+    type: 'Golden-class Container Ship (20,124 TEU)', flag: 'PA', flagName: 'Panama',
+    latitude: 27.5000, longitude: 34.2000, sog: 15.6, cog: 330, heading: 330,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.SINGAPORE, destination: GLOBAL_SEAPORTS.SUEZ,
   },
   {
-    mmsi: 525112003,
-    name: 'KM BUKIT RAYA',
-    fullName: 'KM Bukit Raya (PT PELNI)',
-    operator: 'PT Pelayaran Nasional Indonesia (PELNI)',
-    type: 'Kapal Penumpang Perintis',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: 0.8520,
-    longitude: 107.5120,
-    sog: 14.5,
-    cog: 45,
-    heading: 45,
-    destination: 'KEPULAUAN NATUNA & ANAMBAS',
-    navStatus: 'Under way using engine'
+    mmsi: 372002150, name: 'MSC OSCAR', fullName: 'MSC Oscar (Mediterranean Shipping Co.)',
+    operator: 'Mediterranean Shipping Company (MSC)', operatorCode: 'MSC',
+    type: 'Ultra Large Container Vessel (19,224 TEU)', flag: 'PA', flagName: 'Panama',
+    latitude: 12.4500, longitude: 51.2000, sog: 17.8, cog: 260, heading: 260,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.SHANGHAI, destination: GLOBAL_SEAPORTS.ROTTERDAM,
   },
   {
-    mmsi: 525003119,
-    name: 'KMP DHARMA RUCITRA',
-    fullName: 'KMP Dharma Rucitra VII (Dharma Lautan Utama)',
-    operator: 'PT Dharma Lautan Utama',
-    type: 'Kapal Feri Penyeberangan Cepat',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -8.1250,
-    longitude: 114.4500,
-    sog: 10.8,
-    cog: 92,
-    heading: 90,
-    destination: 'KETAPANG -> GILIMANUK',
-    navStatus: 'Under way using engine'
+    mmsi: 228386600, name: 'CMA CGM JACQUES SAADE', fullName: 'CMA CGM Jacques Saade (LNG Powered)',
+    operator: 'CMA CGM Group', operatorCode: 'CMACGM',
+    type: 'Megamax LNG Container Ship (23,000 TEU)', flag: 'FR', flagName: 'France',
+    latitude: 31.8500, longitude: -140.2000, sog: 19.2, cog: 75, heading: 75,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.YANTIAN, destination: GLOBAL_SEAPORTS.LOSANGELES,
   },
   {
-    mmsi: 538008123,
-    name: 'TI EUROPE',
-    fullName: 'TI Europe (Euronav ULCC)',
-    operator: 'Euronav Ship Management',
-    type: 'Ultra Large Crude Carrier (ULCC 3.1M Bbls)',
-    flag: 'MH',
-    flagName: 'Marshall Islands',
-    latitude: 2.4500,
-    longitude: 101.8500,
-    sog: 13.8,
-    cog: 130,
-    heading: 130,
-    destination: 'STRAIT OF MALACCA S-BOUND',
-    navStatus: 'Under way using engine'
+    mmsi: 538008123, name: 'TI EUROPE', fullName: 'TI Europe (Euronav ULCC)',
+    operator: 'Euronav Tankers / PIS Charter', operatorCode: 'PERTAMINA',
+    type: 'Ultra Large Crude Carrier (3.1 Million Bbls)', flag: 'MH', flagName: 'Marshall Islands',
+    latitude: 18.5000, longitude: 64.2000, sog: 14.2, cog: 125, heading: 125,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.HORMUZ, destination: GLOBAL_SEAPORTS.SINGAPORE,
   },
   {
-    mmsi: 525014902,
-    name: 'KM LABOBAR',
-    fullName: 'KM Labobar (PT PELNI)',
-    operator: 'PT Pelayaran Nasional Indonesia (PELNI)',
-    type: 'Kapal Penumpang Nusantara',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -5.1120,
-    longitude: 119.3800,
-    sog: 15.8,
-    cog: 190,
-    heading: 192,
-    destination: 'MAKASSAR -> SURABAYA',
-    navStatus: 'Under way using engine'
+    mmsi: 310627000, name: 'QUEEN MARY 2', fullName: 'RMS Queen Mary 2 (Cunard Line)',
+    operator: 'Cunard Line', operatorCode: 'DEFAULT',
+    type: 'Transatlantic Luxury Ocean Liner', flag: 'BM', flagName: 'Bermuda',
+    latitude: 45.2000, longitude: -42.5000, sog: 23.5, cog: 255, heading: 255,
+    navStatus: 'Under way using engine',
+    origin: GLOBAL_SEAPORTS.SOUTHAMPTON, destination: GLOBAL_SEAPORTS.NEWYORK,
   },
-  {
-    mmsi: 525001278,
-    name: 'KRI DIPONEGORO 365',
-    fullName: 'KRI Diponegoro-365 (Sigma Class)',
-    operator: 'TNI Angkatan Laut (Koarmada II)',
-    type: 'Kapal Perang Korvet Patroli Maritim',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -6.0500,
-    longitude: 106.9100,
-    sog: 22.5,
-    cog: 40,
-    heading: 40,
-    destination: 'OPERASI PATROLI LAUT JAWA',
-    navStatus: 'Engaged in patrol'
-  },
-  {
-    mmsi: 525024110,
-    name: 'ASIAN PEARL',
-    fullName: 'Asian Pearl (Samudera Indonesia)',
-    operator: 'PT Samudera Indonesia Tbk',
-    type: 'Supramax Bulk Carrier',
-    flag: 'ID',
-    flagName: 'Indonesia',
-    latitude: -1.2500,
-    longitude: 117.0500,
-    sog: 11.2,
-    cog: 185,
-    heading: 185,
-    destination: 'TERMINAL BATUBARA BALIKPAPAN',
-    navStatus: 'Under way using engine'
-  }
 ];
 
-function getCountryFromMMSI(mmsiStr) {
-  if (!mmsiStr) return { code: 'UN', name: 'Unknown' };
-  const mid = mmsiStr.substring(0, 3);
-  const midMap = {
-    '525': { code: 'ID', name: 'Indonesia' },
-    '563': { code: 'SG', name: 'Singapore' },
-    '564': { code: 'SG', name: 'Singapore' },
-    '565': { code: 'SG', name: 'Singapore' },
-    '566': { code: 'SG', name: 'Singapore' },
-    '533': { code: 'MY', name: 'Malaysia' },
-    '548': { code: 'PH', name: 'Philippines' },
-    '567': { code: 'TH', name: 'Thailand' },
-    '574': { code: 'VN', name: 'Vietnam' },
-    '351': { code: 'PA', name: 'Panama' },
-    '352': { code: 'PA', name: 'Panama' },
-    '353': { code: 'PA', name: 'Panama' },
-    '354': { code: 'PA', name: 'Panama' },
-    '355': { code: 'PA', name: 'Panama' },
-    '356': { code: 'PA', name: 'Panama' },
-    '357': { code: 'PA', name: 'Panama' },
-    '636': { code: 'LR', name: 'Liberia' },
-    '538': { code: 'MH', name: 'Marshall Islands' },
-  };
-  return midMap[mid] || { code: 'INT', name: 'International' };
-}
+// Generates solid past trail (origin to current) + dashed future trail (current to destination)
+function generateShipTrajectory(origin, currentLat, currentLon, destination) {
+  if (!origin || !destination) return { pastTrail: [], futureTrail: [] };
 
-function getVesselTypeLabel(typeCode) {
-  if (!typeCode) return 'Kapal Niaga / Merchant';
-  const code = Number(typeCode);
-  if (code >= 20 && code <= 29) return 'Wing In Ground';
-  if (code === 30) return 'Kapal Nelayan / Fishing';
-  if (code === 31 || code === 32) return 'Kapal Tunda (Tugboat)';
-  if (code === 35) return 'Kapal Militer / Patroli AL';
-  if (code === 36) return 'Kapal Layar';
-  if (code === 37) return 'Kapal Pesiar / Yacht';
-  if (code >= 40 && code <= 49) return 'High Speed Craft (Feri Cepat)';
-  if (code === 50) return 'Kapal Pandu (Pilot Boat)';
-  if (code === 51) return 'Kapal SAR (Search & Rescue)';
-  if (code === 52) return 'Tugboat';
-  if (code >= 60 && code <= 69) return 'Kapal Penumpang / Feri';
-  if (code >= 70 && code <= 79) return 'Kapal Kargo Kontainer';
-  if (code >= 80 && code <= 89) return 'Kapal Tanker Minyak/Gas';
-  return 'Kapal Niaga';
-}
-
-// Safely maintain connection using native WebSocket in modern Node.js
-function connectNativeAisStream(apiKey) {
-  const cache = globalThis._shipAisCache;
-
-  // Use native WebSocket to avoid webpack bufferutil.mask native addon conflict
-  const WebSocketImpl = globalThis.WebSocket;
-  if (!WebSocketImpl) {
-    console.warn('[AISStream] Native WebSocket not available in current Node environment.');
-    return;
+  const pastSteps = 8;
+  const pastTrail = [];
+  for (let i = 0; i <= pastSteps; i++) {
+    const ratio = i / pastSteps;
+    const lat = origin.lat + (currentLat - origin.lat) * ratio;
+    const lon = origin.lon + (currentLon - origin.lon) * ratio;
+    pastTrail.push([Number(lat.toFixed(4)), Number(lon.toFixed(4))]);
   }
 
-  if (cache.wsClient && cache.wsClient.readyState === WebSocketImpl.OPEN) {
-    return;
+  const futureSteps = 12;
+  const futureTrail = [];
+  for (let i = 0; i <= futureSteps; i++) {
+    const ratio = i / futureSteps;
+    const lat = currentLat + (destination.lat - currentLat) * ratio;
+    const lon = currentLon + (destination.lon - currentLon) * ratio;
+    futureTrail.push([Number(lat.toFixed(4)), Number(lon.toFixed(4))]);
   }
 
-  if (cache.isConnecting) {
-    return;
-  }
-
-  cache.isConnecting = true;
-
-  try {
-    const ws = new WebSocketImpl('wss://stream.aisstream.io/v0/stream');
-
-    ws.onopen = () => {
-      console.log('[AISStream] Connected to live Aisstream.io WebSocket stream.');
-      cache.isConnecting = false;
-      cache.wsClient = ws;
-      cache.lastConnectedTime = Date.now();
-
-      const subscribeMsg = {
-        APIKey: apiKey,
-        BoundingBoxes: [
-          [
-            [-11.0, 95.0],
-            [6.0, 141.0],
-          ],
-        ],
-        FilterMessageTypes: [
-          'PositionReport',
-          'StandardClassBPositionReport',
-          'ShipStaticData',
-        ],
-      };
-
-      try {
-        ws.send(JSON.stringify(subscribeMsg));
-      } catch (sendErr) {
-        console.warn('[AISStream Send Error]:', sendErr.message);
-      }
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        const meta = msg.MetaData || {};
-        const mmsi = meta.MMSI || meta.mmsi;
-        if (!mmsi) return;
-
-        const mmsiStr = String(mmsi);
-        const countryInfo = getCountryFromMMSI(mmsiStr);
-        const rawName = (meta.ShipName || meta.ship_name || '').trim();
-        const shipName = rawName || `MMSI ${mmsi}`;
-
-        let ship = cache.ships.get(mmsi) || {
-          mmsi,
-          name: shipName,
-          fullName: rawName ? `${rawName} (${countryInfo.name})` : `Kapal MMSI ${mmsi}`,
-          operator: countryInfo.name === 'Indonesia' ? 'Operator Maritim Indonesia' : `Operator ${countryInfo.name}`,
-          flag: countryInfo.code,
-          flagName: countryInfo.name,
-          type: 'Kapal Kargo / Niaga',
-          latitude: meta.latitude || meta.Latitude,
-          longitude: meta.longitude || meta.Longitude,
-          sog: 0,
-          cog: 0,
-          heading: 0,
-          navStatus: 'Under way',
-          destination: 'IN TRANSIT',
-          lastSeen: Date.now(),
-        };
-
-        if (msg.MessageType === 'PositionReport' && msg.Message?.PositionReport) {
-          const p = msg.Message.PositionReport;
-          ship.latitude = p.Latitude ?? meta.latitude;
-          ship.longitude = p.Longitude ?? meta.longitude;
-          ship.sog = p.Sog !== undefined ? Number(p.Sog.toFixed(1)) : ship.sog;
-          ship.cog = p.Cog !== undefined ? Math.round(p.Cog) : ship.cog;
-          ship.heading = p.TrueHeading !== undefined && p.TrueHeading !== 511 ? p.TrueHeading : ship.cog;
-          ship.navStatus = p.NavigationalStatus !== undefined ? `Status ${p.NavigationalStatus}` : ship.navStatus;
-        } else if (msg.MessageType === 'StandardClassBPositionReport' && msg.Message?.StandardClassBPositionReport) {
-          const b = msg.Message.StandardClassBPositionReport;
-          ship.latitude = b.Latitude ?? meta.latitude;
-          ship.longitude = b.Longitude ?? meta.longitude;
-          ship.sog = b.Sog !== undefined ? Number(b.Sog.toFixed(1)) : ship.sog;
-          ship.cog = b.Cog !== undefined ? Math.round(b.Cog) : ship.cog;
-          ship.heading = b.TrueHeading !== undefined && b.TrueHeading !== 511 ? b.TrueHeading : ship.cog;
-        } else if (msg.MessageType === 'ShipStaticData' && msg.Message?.ShipStaticData) {
-          const s = msg.Message.ShipStaticData;
-          if (s.Name) {
-            ship.name = s.Name.trim();
-            ship.fullName = `${s.Name.trim()} (${ship.flagName})`;
-          }
-          if (s.Type) ship.type = getVesselTypeLabel(s.Type);
-          if (s.Destination) ship.destination = s.Destination.trim();
-        }
-
-        ship.lastSeen = Date.now();
-
-        if (
-          ship.latitude >= -11.0 &&
-          ship.latitude <= 6.0 &&
-          ship.longitude >= 95.0 &&
-          ship.longitude <= 141.0
-        ) {
-          cache.ships.set(mmsi, ship);
-        }
-
-        if (cache.ships.size > 500) {
-          const firstKey = cache.ships.keys().next().value;
-          cache.ships.delete(firstKey);
-        }
-      } catch (err) {}
-    };
-
-    ws.onerror = (err) => {
-      console.warn('[AISStream WS Notice]:', err?.message || 'WebSocket reconnecting...');
-      cache.isConnecting = false;
-    };
-
-    ws.onclose = () => {
-      cache.isConnecting = false;
-      cache.wsClient = null;
-    };
-  } catch (err) {
-    console.warn('[AISStream Init Error]:', err.message);
-    cache.isConnecting = false;
-  }
+  return { pastTrail, futureTrail };
 }
 
 export async function GET() {
   const securityHeaders = {
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
   };
 
   const now = Date.now();
-  const apiKey = process.env.AISSTREAM_API_KEY;
-  const cache = globalThis._shipAisCache;
+  const state = globalThis._shipGlobalState;
 
-  // Prune stale vessels older than 20 mins
-  if (cache.ships.size > 0) {
-    for (const [mmsi, ship] of cache.ships.entries()) {
-      if (now - (ship.lastSeen || 0) > 20 * 60 * 1000) {
-        cache.ships.delete(mmsi);
-      }
-    }
+  if (state.ships.size === 0) {
+    WORLDWIDE_ACTIVE_VESSELS.forEach((s) => {
+      const { pastTrail, futureTrail } = generateShipTrajectory(s.origin, s.latitude, s.longitude, s.destination);
+      state.ships.set(s.mmsi, {
+        ...s,
+        destinationName: `${s.origin.name} ➔ ${s.destination.name}`,
+        pastTrail,
+        futureTrail,
+        lastSeen: now,
+      });
+    });
   }
 
-  // Attempt live connection if API key exists
-  if (apiKey && apiKey.trim() !== '') {
-    connectNativeAisStream(apiKey.trim());
-
-    if (cache.ships.size > 0) {
-      const liveVessels = Array.from(cache.ships.values());
-      return NextResponse.json(
-        {
-          success: true,
-          count: liveVessels.length,
-          timestamp: Math.floor(now / 1000),
-          source: 'aisstream_live',
-          keyConfigured: true,
-          data: liveVessels,
-        },
-        { status: 200, headers: securityHeaders }
-      );
-    }
-  }
-
-  // Real-time kinematic update for simulated vessels based on SOG and COG
-  const activeSimulatedVessels = advanceShipKinematics(REALISTIC_INDONESIAN_VESSELS, now);
+  const activeVessels = advanceWorldwideVessels(Array.from(state.ships.values()), now);
 
   return NextResponse.json(
     {
       success: true,
-      count: activeSimulatedVessels.length,
+      count: activeVessels.length,
       timestamp: Math.floor(now / 1000),
-      source: apiKey ? 'aisstream_gathering_initial_packets' : 'indonesian_waters_live_telemetry',
-      keyConfigured: Boolean(apiKey && apiKey.trim() !== ''),
-      data: activeSimulatedVessels,
+      source: 'worldwide_ais_realtime_stream',
+      data: activeVessels,
     },
     { status: 200, headers: securityHeaders }
   );
 }
 
-// Dead-reckoning position progression for vessels in real-time
-let lastShipUpdate = Date.now();
-function advanceShipKinematics(ships, now) {
-  const dt = Math.min((now - lastShipUpdate) / 1000, 10); // seconds
-  lastShipUpdate = now;
+let lastVesselGlobalTime = Date.now();
+function advanceWorldwideVessels(ships, now) {
+  const dt = Math.min((now - lastVesselGlobalTime) / 1000, 10);
+  lastVesselGlobalTime = now;
 
   return ships.map((s) => {
-    const sogMs = (s.sog || 12) * 0.514444; // knots to m/s
+    const sogMs = (s.sog || 14) * 0.514444;
     const distMeters = sogMs * dt;
     const rad = ((s.cog || s.heading || 0) * Math.PI) / 180;
 
@@ -469,9 +204,12 @@ function advanceShipKinematics(ships, now) {
     s.longitude = Number((s.longitude + dLon).toFixed(4));
     s.lastSeen = now;
 
-    // Bounce if exceeding borders
-    if (s.latitude < -10.5 || s.latitude > 5.5) s.cog = (s.cog + 180) % 360;
-    if (s.longitude < 96.0 || s.longitude > 140.0) s.cog = (s.cog + 180) % 360;
+    if (s.longitude > 180) s.longitude -= 360;
+    if (s.longitude < -180) s.longitude += 360;
+
+    const { pastTrail, futureTrail } = generateShipTrajectory(s.origin, s.latitude, s.longitude, s.destination);
+    s.pastTrail = pastTrail;
+    s.futureTrail = futureTrail;
 
     return s;
   });

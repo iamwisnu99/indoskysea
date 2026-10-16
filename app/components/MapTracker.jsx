@@ -14,11 +14,11 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Activity,
-  Radio,
-  Building,
-  Tag
+  Globe,
+  Route,
+  Anchor
 } from 'lucide-react';
+import { getAirlineLogo, getShipLogo } from '../lib/logos';
 
 // Google Maps Tile Providers
 const GOOGLE_MAP_TILES = {
@@ -36,14 +36,16 @@ const GOOGLE_MAP_TILES = {
     attribution: '&copy; Google Maps',
     maxZoom: 20,
   },
-  terrain: {
-    name: 'Google Maps (Terrain)',
-    url: 'https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
-    subdomains: ['0', '1', '2', '3'],
-    attribution: '&copy; Google Maps',
-    maxZoom: 20,
-  },
 };
+
+// Global Regional Camera Presets
+const REGION_PRESETS = [
+  { name: '🇮🇩 Indonesia', center: [-2.5489, 118.0149], zoom: 5 },
+  { name: '🌍 Seluruh Dunia', center: [20.0, 10.0], zoom: 2.2 },
+  { name: '🌏 Asia-Pasifik', center: [15.0, 115.0], zoom: 4 },
+  { name: '🇪🇺 Eropa & Timur Tengah', center: [40.0, 25.0], zoom: 4 },
+  { name: '🇺🇸 Amerika', center: [38.0, -95.0], zoom: 4 },
+];
 
 export default function MapTracker() {
   const mapContainerRef = useRef(null);
@@ -51,6 +53,14 @@ export default function MapTracker() {
   const tileLayerRef = useRef(null);
   const planeMarkersRef = useRef(new Map());
   const shipMarkersRef = useRef(new Map());
+
+  // Trajectory Layer References (Solid Past line, Dashed Future line, Origin/Dest pins)
+  const trajectoryLayersRef = useRef({
+    solidLine: null,
+    dashedLine: null,
+    originMarker: null,
+    destMarker: null,
+  });
 
   // Data states
   const [planes, setPlanes] = useState([]);
@@ -64,7 +74,7 @@ export default function MapTracker() {
   const [tileMode, setTileMode] = useState('roadmap');
   const [selectedEntity, setSelectedEntity] = useState(null); // { type: 'plane'|'ship', id: '...' }
 
-  // Initialize Leaflet Map with Google Maps Tiles
+  // Initialize Leaflet Map with Google Maps
   useEffect(() => {
     let isMounted = true;
 
@@ -74,14 +84,15 @@ export default function MapTracker() {
 
       const L = (await import('leaflet')).default;
 
-      // Center of Indonesia: [-2.5489, 118.0149], Zoom: 5
+      // Default World / Indonesia View
       const map = L.map(mapContainerRef.current, {
         center: [-2.5489, 118.0149],
-        zoom: 5,
+        zoom: 4,
         zoomControl: false,
         attributionControl: true,
-        minZoom: 3,
+        minZoom: 2,
         maxZoom: 19,
+        worldCopyJump: true,
       });
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -115,7 +126,7 @@ export default function MapTracker() {
     };
   }, []);
 
-  // Switch Tile Layer
+  // Switch Google Maps Tile Layer
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
@@ -134,7 +145,7 @@ export default function MapTracker() {
     switchTile();
   }, [tileMode]);
 
-  // Fetch planes from internal Route Handler
+  // Fetch worldwide planes
   const fetchPlanes = useCallback(async () => {
     try {
       const res = await fetch('/api/planes', { cache: 'no-store' });
@@ -147,7 +158,7 @@ export default function MapTracker() {
     }
   }, []);
 
-  // Fetch ships from internal Route Handler
+  // Fetch worldwide ships
   const fetchShips = useCallback(async () => {
     try {
       const res = await fetch('/api/ships', { cache: 'no-store' });
@@ -174,29 +185,33 @@ export default function MapTracker() {
   }, [refreshData]);
 
   // Client-Side Real-Time Dead Reckoning Engine (Every 1 second):
-  // Continuously advances plane and ship positions smoothly according to true speed and heading
+  // Continuously advances plane and ship positions smoothly worldwide
   useEffect(() => {
     const kinematicTicker = setInterval(() => {
-      // 1. Advance aircraft positions in real-time
+      // 1. Advance aircraft in real-time
       setPlanes((prevPlanes) =>
         prevPlanes.map((p) => {
           if (p.onGround || !p.velocity) return p;
-          // velocity in knots -> meters per second
           const vMs = p.velocity * 0.514444;
           const rad = ((p.heading || 0) * Math.PI) / 180;
-          // 1 deg latitude ≈ 111,139 meters
           const dLat = (vMs * Math.cos(rad)) / 111139;
           const dLon = (vMs * Math.sin(rad)) / (111139 * Math.cos((p.latitude * Math.PI) / 180));
 
+          let newLat = Number((p.latitude + dLat).toFixed(5));
+          let newLon = Number((p.longitude + dLon).toFixed(5));
+
+          if (newLon > 180) newLon -= 360;
+          if (newLon < -180) newLon += 360;
+
           return {
             ...p,
-            latitude: Number((p.latitude + dLat).toFixed(5)),
-            longitude: Number((p.longitude + dLon).toFixed(5)),
+            latitude: newLat,
+            longitude: newLon,
           };
         })
       );
 
-      // 2. Advance ship positions in real-time
+      // 2. Advance ships in real-time
       setShips((prevShips) =>
         prevShips.map((s) => {
           if (!s.sog || s.sog < 0.3) return s;
@@ -205,10 +220,16 @@ export default function MapTracker() {
           const dLat = (vMs * Math.cos(rad)) / 111139;
           const dLon = (vMs * Math.sin(rad)) / (111139 * Math.cos((s.latitude * Math.PI) / 180));
 
+          let newLat = Number((s.latitude + dLat).toFixed(5));
+          let newLon = Number((s.longitude + dLon).toFixed(5));
+
+          if (newLon > 180) newLon -= 360;
+          if (newLon < -180) newLon += 360;
+
           return {
             ...s,
-            latitude: Number((s.latitude + dLat).toFixed(5)),
-            longitude: Number((s.longitude + dLon).toFixed(5)),
+            latitude: newLat,
+            longitude: newLon,
           };
         })
       );
@@ -245,7 +266,8 @@ export default function MapTracker() {
           p.airlineName?.toLowerCase().includes(q) ||
           p.aircraftModel?.toLowerCase().includes(q) ||
           p.id?.toLowerCase().includes(q) ||
-          p.country?.toLowerCase().includes(q)
+          p.country?.toLowerCase().includes(q) ||
+          p.estimatedRoute?.toLowerCase().includes(q)
         );
       });
 
@@ -333,7 +355,8 @@ export default function MapTracker() {
           s.fullName?.toLowerCase().includes(q) ||
           s.operator?.toLowerCase().includes(q) ||
           String(s.mmsi).includes(q) ||
-          s.type?.toLowerCase().includes(q)
+          s.type?.toLowerCase().includes(q) ||
+          s.destination?.name?.toLowerCase().includes(q)
         );
       });
 
@@ -394,49 +417,152 @@ export default function MapTracker() {
     };
   }, [ships, showShips, searchQuery, selectedEntity]);
 
-  // Currently selected entity live data (safe against null)
+  // Safe selected entity data
   const currentSelectedData = selectedEntity
     ? (selectedEntity.type === 'plane'
         ? planes.find((p) => p.id === selectedEntity.id)
         : ships.find((s) => s.mmsi === selectedEntity.id))
     : null;
 
+  // Render Trajectory Lines (SOLID for past trail, DASHED for destination projection)
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    let isSubscribed = true;
+
+    async function updateTrajectory() {
+      const L = (await import('leaflet')).default;
+      if (!isSubscribed || !mapInstanceRef.current) return;
+
+      const map = mapInstanceRef.current;
+      const ref = trajectoryLayersRef.current;
+
+      // Clean up previous trajectory lines and waypoint markers
+      if (ref.solidLine) { map.removeLayer(ref.solidLine); ref.solidLine = null; }
+      if (ref.dashedLine) { map.removeLayer(ref.dashedLine); ref.dashedLine = null; }
+      if (ref.originMarker) { map.removeLayer(ref.originMarker); ref.originMarker = null; }
+      if (ref.destMarker) { map.removeLayer(ref.destMarker); ref.destMarker = null; }
+
+      if (!currentSelectedData) return;
+
+      const isPlane = selectedEntity.type === 'plane';
+      const lineColor = isPlane ? '#f59e0b' : '#0284c7';
+
+      // 1. Solid Line for path already traversed (Origin -> Current position)
+      if (Array.isArray(currentSelectedData.pastTrail) && currentSelectedData.pastTrail.length > 0) {
+        ref.solidLine = L.polyline(currentSelectedData.pastTrail, {
+          color: lineColor,
+          weight: 3.5,
+          opacity: 0.9,
+          lineJoin: 'round',
+        }).addTo(map);
+      }
+
+      // 2. Dashed Line for projected trajectory to destination (Current position -> Destination)
+      if (Array.isArray(currentSelectedData.futureTrail) && currentSelectedData.futureTrail.length > 0) {
+        ref.dashedLine = L.polyline(currentSelectedData.futureTrail, {
+          color: lineColor,
+          weight: 3,
+          opacity: 0.85,
+          dashArray: '8, 8',
+          lineCap: 'round',
+        }).addTo(map);
+      }
+
+      // 3. Origin Waypoint Pin
+      if (currentSelectedData.origin && currentSelectedData.origin.lat && currentSelectedData.origin.lon) {
+        const originLabel = isPlane ? `🛫 ${currentSelectedData.origin.code || currentSelectedData.origin.city}` : `⚓ ${currentSelectedData.origin.name || currentSelectedData.origin.city}`;
+        const originIcon = L.divIcon({
+          html: `<div class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-slate-800 border border-slate-300 shadow-md whitespace-nowrap flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>${originLabel}</span></div>`,
+          className: 'origin-waypoint-pin',
+          iconAnchor: [30, 10],
+        });
+        ref.originMarker = L.marker([currentSelectedData.origin.lat, currentSelectedData.origin.lon], { icon: originIcon }).addTo(map);
+      }
+
+      // 4. Destination Waypoint Pin
+      if (currentSelectedData.destination && currentSelectedData.destination.lat && currentSelectedData.destination.lon) {
+        const destLabel = isPlane ? `🛬 ${currentSelectedData.destination.code || currentSelectedData.destination.city}` : `⚓ ${currentSelectedData.destination.name || currentSelectedData.destination.city}`;
+        const destIcon = L.divIcon({
+          html: `<div class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-white shadow-md whitespace-nowrap flex items-center space-x-1 animate-pulse"><span class="w-2 h-2 rounded-full bg-rose-400"></span><span>${destLabel}</span></div>`,
+          className: 'dest-waypoint-pin',
+          iconAnchor: [30, 10],
+        });
+        ref.destMarker = L.marker([currentSelectedData.destination.lat, currentSelectedData.destination.lon], { icon: destIcon }).addTo(map);
+      }
+    }
+
+    updateTrajectory();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [currentSelectedData, selectedEntity]);
+
   // Center camera onto selected entity
   const handleCenterOnEntity = () => {
     if (!currentSelectedData || !mapInstanceRef.current) return;
     mapInstanceRef.current.flyTo(
       [currentSelectedData.latitude, currentSelectedData.longitude],
-      11,
+      10,
       { duration: 1.2 }
     );
   };
 
+  // Jump to regional camera preset
+  const handleJumpRegion = (center, zoom) => {
+    if (!mapInstanceRef.current) return;
+    mapInstanceRef.current.flyTo(center, zoom, { duration: 1.5 });
+  };
+
+  // Resolve official SVG logo
+  const activeLogo = currentSelectedData
+    ? (selectedEntity?.type === 'plane'
+        ? getAirlineLogo(currentSelectedData.airlineCode, currentSelectedData.callsign, currentSelectedData.airlineName)
+        : getShipLogo(currentSelectedData.operator, currentSelectedData.fullName || currentSelectedData.name))
+    : null;
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-100 font-sans select-none">
-      {/* 1. Leaflet Map Container with Google Maps Tiles */}
+      {/* 1. Leaflet Map with Google Maps Tiles */}
       <div id="radar-map" ref={mapContainerRef} className="w-full h-full z-0 cursor-grab active:cursor-grabbing" />
 
-      {/* 2. Sleek Floating Header Pill Bar */}
+      {/* 2. Top Floating Header & Filter Pill Bar */}
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
-        {/* Left: Brand & Search */}
+        {/* Left: Brand, Global Preset Selector & Search */}
         <div className="flex items-center space-x-2 pointer-events-auto">
+          {/* Brand Pill */}
           <div className="glass-clean rounded-full px-4 py-2 flex items-center space-x-2.5 shadow-sm">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
             <span className="text-xs font-extrabold tracking-wide text-slate-800 uppercase">
-              Nusantara Radar
+              Global Radar
             </span>
           </div>
 
-          <div className="relative hidden sm:block">
+          {/* Regional Quick Jump Selector */}
+          <div className="hidden md:flex items-center space-x-1 glass-clean px-2 py-1 rounded-full shadow-sm text-xs">
+            <Globe className="w-3.5 h-3.5 text-slate-400 ml-1.5" />
+            {REGION_PRESETS.map((preset, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleJumpRegion(preset.center, preset.zoom)}
+                className="px-2 py-1 rounded-full text-[11px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              >
+                {preset.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Input */}
+          <div className="relative hidden lg:block">
             <input
               type="text"
-              placeholder="Cari Pesawat, Maskapai, Kapal..."
+              placeholder="Cari Pesawat, Maskapai, Kapal Dunia..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="glass-clean pl-8 pr-7 py-2 text-xs rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-56 lg:w-72 transition-all shadow-sm"
+              className="glass-clean pl-8 pr-7 py-2 text-xs rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-64 transition-all shadow-sm"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
             {searchQuery && (
@@ -450,9 +576,9 @@ export default function MapTracker() {
           </div>
         </div>
 
-        {/* Right: Filter Buttons & Controls */}
+        {/* Right: Layer Filters & Quick Controls */}
         <div className="flex items-center space-x-2 pointer-events-auto">
-          {/* Plane Toggle */}
+          {/* Toggle Pesawat */}
           <button
             onClick={() => setShowPlanes(!showPlanes)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 transition-all shadow-sm ${
@@ -462,13 +588,13 @@ export default function MapTracker() {
             }`}
           >
             <Plane className="w-3.5 h-3.5" />
-            <span>Pesawat</span>
+            <span>Pesawat Global</span>
             <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${showPlanes ? 'bg-black/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
               {planes.length}
             </span>
           </button>
 
-          {/* Ship Toggle */}
+          {/* Toggle Kapal */}
           <button
             onClick={() => setShowShips(!showShips)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2 transition-all shadow-sm ${
@@ -478,7 +604,7 @@ export default function MapTracker() {
             }`}
           >
             <Ship className="w-3.5 h-3.5" />
-            <span>Kapal</span>
+            <span>Kapal Global</span>
             <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${showShips ? 'bg-black/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
               {ships.length}
             </span>
@@ -488,7 +614,7 @@ export default function MapTracker() {
           <button
             onClick={() => setTileMode(tileMode === 'roadmap' ? 'satellite' : 'roadmap')}
             className="glass-clean p-2 rounded-full text-slate-600 hover:text-sky-600 transition-colors shadow-sm"
-            title={tileMode === 'roadmap' ? 'Ganti ke Google Satelit' : 'Ganti ke Google Maps Standar'}
+            title={tileMode === 'roadmap' ? 'Ganti ke Google Satelit Hybrid' : 'Ganti ke Google Maps Standar'}
           >
             <Layers className="w-4 h-4" />
           </button>
@@ -505,21 +631,22 @@ export default function MapTracker() {
         </div>
       </div>
 
-      {/* 3. Detail Telemetri On-Demand (HANYA MUNCUL KETIKA PESAWAT ATAU KAPAL DITEKAN) */}
+      {/* 3. Detail Telemetri On-Demand dengan LOGO Resmi & Trajektori Garis Jalur */}
       {currentSelectedData && (
-        <div className="absolute bottom-5 right-4 left-4 sm:left-auto sm:w-[410px] z-30 animate-in fade-in slide-in-from-bottom-4 duration-250 pointer-events-auto">
+        <div className="absolute bottom-5 right-4 left-4 sm:left-auto sm:w-[420px] z-30 animate-in fade-in slide-in-from-bottom-4 duration-250 pointer-events-auto">
           <div className="glass-clean-card rounded-2xl p-5 shadow-2xl border border-slate-200/90 space-y-4">
             
-            {/* Header: Genuine Name & Close Button */}
+            {/* Header: Official Vector Logo, Full Genuine Name & Close Button */}
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2.5 rounded-xl ${
-                  selectedEntity.type === 'plane'
-                    ? 'bg-amber-50 text-amber-600 border border-amber-200/60'
-                    : 'bg-sky-50 text-sky-600 border border-sky-200/60'
-                }`}>
-                  {selectedEntity.type === 'plane' ? <Plane className="w-5 h-5" /> : <Ship className="w-5 h-5" />}
-                </div>
+              <div className="flex items-center space-x-3.5">
+                {/* Official SVG Logo */}
+                {activeLogo && (
+                  <div
+                    className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-slate-100 flex items-center justify-center p-1 bg-white shrink-0"
+                    dangerouslySetInnerHTML={{ __html: activeLogo.svg }}
+                  />
+                )}
+
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="text-base font-extrabold text-slate-900 tracking-tight">
@@ -545,27 +672,47 @@ export default function MapTracker() {
               </button>
             </div>
 
-            {/* Estimated Route Banner */}
-            {selectedEntity.type === 'plane' && currentSelectedData.estimatedRoute && (
-              <div className="bg-sky-50/70 border border-sky-100 rounded-xl px-3 py-2 flex items-center space-x-2 text-xs">
-                <MapPin className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                <div className="truncate">
-                  <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Perkiraan Rute Penerbangan</span>
-                  <span className="font-semibold text-sky-900">{currentSelectedData.estimatedRoute}</span>
-                </div>
+            {/* Trajectory Info & Legend */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center space-x-1.5">
+                  <Route className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Trajektori & Rute Navigasi</span>
+                </span>
+                <span className="text-[10px] font-medium text-slate-400">
+                  {selectedEntity.type === 'plane' ? 'Jalur Penerbangan' : 'Pelayaran Laut'}
+                </span>
               </div>
-            )}
 
-            {/* Vessel Destination Banner */}
-            {selectedEntity.type === 'ship' && currentSelectedData.destination && (
-              <div className="bg-sky-50/70 border border-sky-100 rounded-xl px-3 py-2 flex items-center space-x-2 text-xs">
-                <MapPin className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                <div className="truncate">
-                  <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Rute Pelabuhan Tujuan</span>
-                  <span className="font-semibold text-sky-900">{currentSelectedData.destination}</span>
+              {/* Origin -> Destination Route Badge */}
+              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-slate-200/60 shadow-xs">
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="font-bold text-slate-800">
+                    {currentSelectedData.origin?.code || currentSelectedData.origin?.city || 'Asal'}
+                  </span>
+                </div>
+                <span className="text-slate-400 font-mono text-[11px]">&rarr;</span>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                  <span className="font-bold text-slate-800">
+                    {currentSelectedData.destination?.code || currentSelectedData.destination?.city || 'Tujuan'}
+                  </span>
                 </div>
               </div>
-            )}
+
+              {/* Visual Line Legend */}
+              <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 pt-0.5">
+                <div className="flex items-center space-x-1.5">
+                  <span className={`w-4 h-0.5 ${selectedEntity.type === 'plane' ? 'bg-amber-500' : 'bg-sky-600'}`}></span>
+                  <span>Jalur Terlewati (Menyambung)</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className={`w-4 h-0.5 border-b-2 border-dashed ${selectedEntity.type === 'plane' ? 'border-amber-500' : 'border-sky-600'}`}></span>
+                  <span>Proyeksi Tujuan (Putus-putus)</span>
+                </div>
+              </div>
+            </div>
 
             {/* Metric Stats Cards */}
             {selectedEntity.type === 'plane' ? (
@@ -589,7 +736,7 @@ export default function MapTracker() {
                       {currentSelectedData.velocity ? `${currentSelectedData.velocity} kts` : '0 kts'}
                     </span>
                     <span className="text-[10px] text-slate-400 block">
-                      ({currentSelectedData.velocityKmh ? `${currentSelectedData.velocityKmh} km/h` : '-'})
+                      ({currentSelectedData.velocity ? `${Math.round(currentSelectedData.velocity * 1.852)} km/h` : '-'})
                     </span>
                   </div>
 
@@ -624,11 +771,11 @@ export default function MapTracker() {
                   </div>
                 </div>
 
-                {/* Technical Specifications */}
+                {/* Additional Spec Table */}
                 <div className="text-xs text-slate-600 divide-y divide-slate-100">
                   <div className="flex justify-between py-1.5">
                     <span className="text-slate-400">Kode Registrasi (Ekor):</span>
-                    <span className="font-mono font-semibold text-slate-800">{currentSelectedData.registration || 'PK-AIRCRAFT'}</span>
+                    <span className="font-mono font-semibold text-slate-800">{currentSelectedData.registration || 'AIRCRAFT'}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
                     <span className="text-slate-400">Model Pesawat:</span>
@@ -646,7 +793,6 @@ export default function MapTracker() {
                   </div>
                 </div>
 
-                {/* Center Camera Action */}
                 <button
                   onClick={handleCenterOnEntity}
                   className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center justify-center space-x-2 transition-all shadow-md active:scale-98"
@@ -674,9 +820,9 @@ export default function MapTracker() {
                   </div>
 
                   <div className="col-span-2 bg-slate-50/80 rounded-xl p-3 border border-slate-100">
-                    <span className="text-[11px] font-medium text-slate-500 block">Operator Armada</span>
+                    <span className="text-[11px] font-medium text-slate-500 block">Operator Pelayaran</span>
                     <span className="text-sm font-bold text-slate-800">
-                      {currentSelectedData.operator || 'Operator Maritim'}
+                      {currentSelectedData.operator || 'Operator Maritim Global'}
                     </span>
                   </div>
                 </div>
@@ -687,8 +833,8 @@ export default function MapTracker() {
                     <span className="font-mono font-semibold text-slate-800">{currentSelectedData.mmsi}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
-                    <span className="text-slate-400">Bendera / Negara:</span>
-                    <span className="font-medium text-slate-800">{currentSelectedData.flagName || 'Indonesia'} ({currentSelectedData.flag || 'ID'})</span>
+                    <span className="text-slate-400">Bendera / Registrasi:</span>
+                    <span className="font-medium text-slate-800">{currentSelectedData.flagName || 'International'} ({currentSelectedData.flag || 'UN'})</span>
                   </div>
                   <div className="flex justify-between py-1.5">
                     <span className="text-slate-400">Status Navigasi:</span>
