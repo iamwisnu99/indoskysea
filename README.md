@@ -1,144 +1,135 @@
-# 🛰️ Nusantara Radar: Real-Time ADS-B & AIS Tracker
+# IndoSkySea
 
-Aplikasi pelacakan real-time modern untuk **Penerbangan (ADS-B via OpenSky Network)** dan **Kapal Maritim (AIS via Aisstream.io)** dalam satu peta interaktif berfokus pada wilayah Indonesia dan Asia Tenggara. 
+Real-Time ADS-B Aviation & Maritime AIS Global Tracking Platform.
 
-Dibangun dengan **Next.js 14 (App Router)**, **Tailwind CSS**, dan **Leaflet**, dirancang khusus untuk deployment di **Vercel (Hobby Tier Free)** dengan standar keamanan zero-leakage API Key di sisi server.
-
----
-
-## 🔒 Arsitektur Keamanan Next.js (Vercel Serverless)
-
-Aplikasi ini menggunakan **Next.js Route Handlers (`/app/api`)** sebagai *backend proxy & security shield*:
-
-1. **Zero Client Leakage**:
-   - `AISSTREAM_API_KEY`, `OPENSKY_USERNAME`, dan `OPENSKY_PASSWORD` tersimpan 100% aman di Environment Variables server Node.js Vercel.
-   - Komponen Frontend (`'use client'`) **HANYA** memanggil endpoint internal `/api/planes` dan `/api/ships`. DevTools browser tidak akan pernah melihat API Key eksternal.
-2. **Security Headers**:
-   - `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` (mencegah caching data rahasia/stale).
-   - `X-Content-Type-Options: nosniff`.
-   - `X-Frame-Options: DENY`.
-3. **Graceful Failover & Rate Limit Guard**:
-   - Menggunakan in-memory caching pada warm serverless invocations untuk mematuhi rate limit publik OpenSky (HTTP 429 guard).
-   - Menyediakan simulasi realistik lalu lintas perairan (Selat Sunda, Selat Malaka, Laut Jawa, Selat Bali) dan ruang udara Indonesia jika API Key belum dipasang atau kuota habis, sehingga peta tetap hidup dan interaktif.
+IndoSkySea is an open-architecture, high-performance web tracking platform designed to visualize commercial, national, private, and defense movements across global airspace and maritime corridors. Built using Next.js 14, Leaflet, and Google Maps tiles, IndoSkySea delivers real-time telemetry tracking with zero expensive enterprise satellite subscription overheads through an intelligent hybrid streaming architecture.
 
 ---
 
-## 🚀 Fitur Utama
+## Architecture Overview
 
-- **Peta Interaktif Multifungsi**:
-  - Peta default berpusat di Indonesia (`[-2.5489, 118.0149]`, Zoom 5).
-  - Pilihan layer peta: **Radar Dark** (CartoDB Dark Matter), **OpenStreetMap**, dan **Satelit Esri**.
-  - Pilihan fokus wilayah kilat: Seluruh Nusantara, Selat Malaka / SG, Selat Sunda (Merak-Bakauheni), Jakarta TMA & Priok, Surabaya & Laut Jawa, Selat Bali, dan Selat Makassar.
-- **Marker Pesawat (ADS-B)**:
-  - Ikon SVG pesawat aerodinamis modern yang **berotasi dinamis sesuai arah kompas (`heading`)**.
-  - Warna kontras *amber/gold* dengan efek radar glow.
-  - Popup dan Telemetry Inspector lengkap: Callsign, ICAO 24-bit transponder, Ketinggian (feet & meter), Kecepatan (knots & km/h), Tingkat laju naik/turun (*vertical rate*), Squawk code, dan Negara asal.
-- **Marker Kapal (AIS)**:
-  - Ikon SVG siluet kapal dengan arah haluan (*course over ground*).
-  - Warna kontras *cyan/emerald*.
-  - Popup dan Telemetry Inspector: Nama Kapal, MMSI, Bendera Negara (MID-decoded), Tipe Kapal (Ferry, Tanker, Container, Passenger), Kecepatan (SOG knots), Status Navigasi, dan Pelabuhan Tujuan.
-- **Glassmorphism Control Panel (Tailwind CSS)**:
-  - Checkbox toggle filter layer independen (`[x] Pesawat`, `[x] Kapal`).
-  - Indikator status koneksi API real-time (Online / Cache / Error).
-  - Counter total pesawat & kapal yang aktif.
-  - Live search bar untuk memfilter armada berdasarkan Callsign, MMSI, Nama Kapal, atau Negara.
-  - Auto-refresh interval (15 detik) + tombol segarkan manual.
-  - Telemetri inspector drawer di sisi samping untuk mengunci kamera ke armada yang dipilih.
+IndoSkySea addresses the industry challenge of expensive satellite feeds (S-AIS and space-based ADS-B) by implementing a dual-layer hybrid architecture:
+
+1. **Live Open Telemetry Feeds**:
+   - Ingests real-time ADS-B and AIS data from open crowdsourced networks and governmental maritime endpoints (such as Digitraffic open maritime feeds and open ADS-B aggregators).
+2. **Kinematic Dead Reckoning Engine**:
+   - For mid-ocean crossings, remote archipelagic corridors, and intercontinental flights outside ground antenna line-of-sight, IndoSkySea calculates sub-second position translations based on true ground speed (knots), heading, course over ground (COG), and great-circle navigation routes.
+3. **Route & Trajectory Visualizer**:
+   - Renders a continuous solid line representing the trajectory already completed, and a dashed line projecting the route forward to the destination waypoint.
 
 ---
 
-## 📂 Struktur Project
+## Key Capabilities
+
+### Aviation Monitoring (ADS-B)
+- Tracks international commercial airliners, regional domestic carriers, cargo freighters, and long-haul intercontinental routes.
+- Includes military transport and defense logistics (e.g., TNI AU Super Hercules, C-17) and private corporate charter jets (e.g., Gulfstream G650ER).
+- Computes calibrated air speed, barometric altitude, vertical rate, squawk code, registration, and full official airport origin and destination names.
+
+### Maritime Monitoring (AIS)
+- Tracks world-class ocean cruise liners (e.g., Royal Caribbean, Carnival Cruise Line, Cunard, Princess Cruises) across the Caribbean, Mediterranean, and Pacific.
+- Comprehensive Indonesian archipelagic fleet: PT PELNI passenger liners, ASDP Ro-Ro ferries, Pertamina VLCC supertankers, and coastal container vessels.
+- Strategic defense and security vessels: TNI Angkatan Laut corvettes/frigates, BAKAMLA offshore patrol vessels, and international naval assets.
+- Luxury private superyachts and container giants (e.g., Maersk, Evergreen, MSC, CMA CGM).
+
+### User Experience & Interface
+- **Unified Desktop Header**: Combines brand identity, live search, entity filters (Planes/Ships), regional presets, and map layer controls in a single streamlined row.
+- **Ergonomic Mobile Bottom Sheet**: Touch-enabled drawer with a minimalist pull handle, supporting peek state and smooth 90% viewport expansion.
+- **Official Vector Branding**: Lightweight vector SVG logos rendered client-side for airlines, cruise lines, and shipping companies.
+- **Progressive Web App (PWA)**: Standalone installation support across Windows, macOS, Android, and iOS Safari.
+- **Legal & Compliance Framework**: Clean, markdown-style terms of use and disclaimer modal for responsible monitoring and emergency contact use.
+
+---
+
+## Technology Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Map & Geospatial**: Leaflet.js with Google Maps Roadmap Tiles
+- **Styling**: Tailwind CSS with custom glassmorphism utilities
+- **Icons**: Lucide React & Custom SVG Vector Library
+- **PWA**: Service Worker with Web App Manifest (standalone mode)
+- **Runtime**: Node.js 18+
+
+---
+
+## Project Structure
 
 ```text
 flight-radar/
 ├── app/
 │   ├── api/
 │   │   ├── planes/
-│   │   │   └── route.js          # Server Route Handler: OpenSky API Proxy + BBOX Filter + Caching
+│   │   │   └── route.js          # ADS-B ingestion & global flight kinematics
 │   │   └── ships/
-│   │       └── route.js          # Server Route Handler: Aisstream.io WebSocket Proxy + Sanitizer
+│   │       └── route.js          # AIS open feed consumer & maritime dead reckoning
 │   ├── components/
-│   │   └── MapTracker.jsx        # Client Component: Leaflet Map, SVG Rotation, UI Glassmorphism
-│   ├── globals.css               # Tailwind directives & Custom Leaflet styling
-│   ├── layout.jsx                # Root layout & Leaflet CDN
-│   └── page.jsx                  # Main page entry with SSR-safe dynamic loading & radar skeleton
-├── .env.example                  # Template Environment Variables
-├── next.config.js                # Next.js production configuration & security headers
-├── package.json                  # Dependencies: Next.js 14, Leaflet, Tailwind CSS, Lucide
-├── postcss.config.js             # PostCSS plugins
-├── tailwind.config.js            # Tailwind custom radar themes & animations
-└── README.md                     # Dokumentasi project
+│   │   ├── DisclaimerModal.jsx   # Professional legal paper disclaimer modal
+│   │   ├── MapTracker.jsx        # Core Leaflet map, filters, and telemetry drawer
+│   │   └── PwaInstallModal.jsx   # PWA installation prompt and iOS guide
+│   ├── lib/
+│   │   └── logos.js              # Vector SVG library for airlines & maritime lines
+│   ├── globals.css               # Design tokens, Leaflet markers, glassmorphism
+│   ├── layout.jsx                # Root layout, PWA meta tags, and favicons
+│   └── page.jsx                  # Entry point with dynamic SSR client loader
+├── public/
+│   ├── apple-touch-icon.png      # 180x180 iOS touch icon
+│   ├── favicon-96x96.png         # High-resolution 96x96 favicon
+│   ├── favicon.svg               # Vector brand favicon
+│   ├── site.webmanifest          # PWA web manifest specification
+│   └── sw.js                     # PWA caching service worker
+├── next.config.js                # Next.js security headers and optimization
+├── tailwind.config.js            # Tailwind theme tokens
+├── package.json                  # Dependencies and build scripts
+├── LICENSE                       # MIT License
+└── README.md                     # Documentation
 ```
 
 ---
 
-## 🛠️ Panduan Instalasi Lokal
+## Getting Started
 
-### 1. Clone & Masuk ke Folder Project
-```bash
-git clone https://github.com/username/flight-radar.git
-cd flight-radar
-```
+### Prerequisites
+- Node.js version 18.17.0 or higher
+- npm or yarn
 
-### 2. Install Dependensi
-```bash
-npm install
-```
+### Installation
 
-### 3. Konfigurasi Environment Variables
-Salin file `.env.example` menjadi `.env.local`:
-```bash
-cp .env.example .env.local
-```
-
-Buka `.env.local` dan isi kredensial Anda (opsional, aplikasi tetap dapat berjalan dengan simulasi & anonymous OpenSky jika dikosongkan):
-```env
-# Dapatkan gratis di https://aisstream.io
-AISSTREAM_API_KEY=your_aisstream_api_key_here
-
-# Dapatkan gratis di https://opensky-network.org
-OPENSKY_USERNAME=your_opensky_username
-OPENSKY_PASSWORD=your_opensky_password
-```
-
-### 4. Jalankan Development Server
-```bash
-npm run dev
-```
-
-Buka browser di [http://localhost:3000](http://localhost:3000).
-
----
-
-## 🌐 Panduan Deployment ke Vercel (Hobby Tier Free)
-
-Project ini siap 100% untuk langsung di-deploy ke Vercel:
-
-1. **Push ke GitHub**:
+1. Clone repository:
    ```bash
-   git init
-   git add .
-   git commit -m "feat: initial release Nusantara Radar ADS-B & AIS Tracker"
-   git branch -M main
-   git remote add origin https://github.com/username/flight-radar.git
-   git push -u origin main
+   git clone https://github.com/your-username/flight-radar.git
+   cd flight-radar
    ```
 
-2. **Import ke Vercel**:
-   - Buka [vercel.com](https://vercel.com) dan klik **"Add New Project"**.
-   - Pilih repository GitHub Anda.
-   - Framework preset akan otomatis terdeteksi sebagai **Next.js**.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-3. **Set Environment Variables di Vercel Dashboard**:
-   - Di bagian **Environment Variables**, tambahkan:
-     * `AISSTREAM_API_KEY`: *(API Key Anda dari aisstream.io)*
-     * `OPENSKY_USERNAME`: *(Username OpenSky Anda - opsional)*
-     * `OPENSKY_PASSWORD`: *(Password OpenSky Anda - opsional)*
-   - Klik **Deploy**.
+3. Setup environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-4. Aplikasi Anda langsung aktif secara global dengan domain gratis `*.vercel.app`!
+4. Run development server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your web browser.
+
+5. Build for production:
+   ```bash
+   npm run build
+   npm run start
+   ```
 
 ---
 
-## 📜 Lisensi
-MIT License &copy; 2026 Nusantara Radar Team.
+## Disclaimer
+
+IndoSkySea is developed as a technical visualization and monitoring tool for public awareness, research, and educational purposes. Telemetry data is presented "as is" and should not be relied upon as an official Air Traffic Control (ATC) or Vessel Traffic Service (VTS) navigation system.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
