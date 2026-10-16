@@ -474,26 +474,38 @@ export default function MapTracker() {
         }).addTo(map);
       }
 
-      // 3. Origin Waypoint Pin
+      // 3. Origin Waypoint Pin with Full Name Tooltip
       if (currentSelectedData.origin && currentSelectedData.origin.lat && currentSelectedData.origin.lon) {
-        const originLabel = isPlane ? `🛫 ${currentSelectedData.origin.code || currentSelectedData.origin.city}` : `⚓ ${currentSelectedData.origin.name || currentSelectedData.origin.city}`;
+        const originLabel = isPlane
+          ? `🛫 ${currentSelectedData.origin.city} (${currentSelectedData.origin.code})`
+          : `⚓ ${currentSelectedData.origin.city}`;
+        const originFullTooltip = `${currentSelectedData.origin.name} - ${currentSelectedData.origin.city}, ${currentSelectedData.origin.country}`;
+
         const originIcon = L.divIcon({
-          html: `<div class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white text-slate-800 border border-slate-300 shadow-md whitespace-nowrap flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>${originLabel}</span></div>`,
+          html: `<div class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white text-slate-800 border border-slate-300 shadow-md whitespace-nowrap flex items-center space-x-1.5" title="${originFullTooltip}"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>${originLabel}</span></div>`,
           className: 'origin-waypoint-pin',
-          iconAnchor: [35, 12],
+          iconAnchor: [45, 12],
         });
-        ref.originMarker = L.marker([currentSelectedData.origin.lat, currentSelectedData.origin.lon], { icon: originIcon }).addTo(map);
+        ref.originMarker = L.marker([currentSelectedData.origin.lat, currentSelectedData.origin.lon], { icon: originIcon })
+          .bindTooltip(originFullTooltip, { direction: 'top', offset: [0, -10] })
+          .addTo(map);
       }
 
-      // 4. Destination Waypoint Pin
+      // 4. Destination Waypoint Pin with Full Name Tooltip
       if (currentSelectedData.destination && currentSelectedData.destination.lat && currentSelectedData.destination.lon) {
-        const destLabel = isPlane ? `🛬 ${currentSelectedData.destination.code || currentSelectedData.destination.city}` : `⚓ ${currentSelectedData.destination.name || currentSelectedData.destination.city}`;
+        const destLabel = isPlane
+          ? `🛬 ${currentSelectedData.destination.city} (${currentSelectedData.destination.code})`
+          : `⚓ ${currentSelectedData.destination.city}`;
+        const destFullTooltip = `${currentSelectedData.destination.name} - ${currentSelectedData.destination.city}, ${currentSelectedData.destination.country}`;
+
         const destIcon = L.divIcon({
-          html: `<div class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-900 text-white shadow-md whitespace-nowrap flex items-center space-x-1.5 animate-pulse"><span class="w-2 h-2 rounded-full bg-rose-400"></span><span>${destLabel}</span></div>`,
+          html: `<div class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-900 text-white shadow-md whitespace-nowrap flex items-center space-x-1.5 animate-pulse" title="${destFullTooltip}"><span class="w-2 h-2 rounded-full bg-rose-400"></span><span>${destLabel}</span></div>`,
           className: 'dest-waypoint-pin',
-          iconAnchor: [35, 12],
+          iconAnchor: [45, 12],
         });
-        ref.destMarker = L.marker([currentSelectedData.destination.lat, currentSelectedData.destination.lon], { icon: destIcon }).addTo(map);
+        ref.destMarker = L.marker([currentSelectedData.destination.lat, currentSelectedData.destination.lon], { icon: destIcon })
+          .bindTooltip(destFullTooltip, { direction: 'top', offset: [0, -10] })
+          .addTo(map);
       }
     }
 
@@ -533,7 +545,7 @@ export default function MapTracker() {
       {/* 1. Leaflet Map with Google Maps Tiles */}
       <div id="radar-map" ref={mapContainerRef} className="w-full h-full z-0 cursor-grab active:cursor-grabbing" />
 
-      {/* 2. Top Floating Header & Filter Bar (Refined Border-Radius & Taller Dimensions) */}
+      {/* 2. Top Floating Header & Filter Bar */}
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
         
         {/* Left: Brand, Regional Flag Filter & Search */}
@@ -592,7 +604,7 @@ export default function MapTracker() {
           </div>
         </div>
 
-        {/* Right: Layer Filters & Controls (Taller with Moderate Border-Radius) */}
+        {/* Right: Layer Filters & Controls */}
         <div className="flex items-center space-x-2 pointer-events-auto">
           {/* Toggle Pesawat */}
           <button
@@ -647,9 +659,9 @@ export default function MapTracker() {
         </div>
       </div>
 
-      {/* 3. Detail Telemetri On-Demand dengan LOGO Resmi & Trajektori Garis Jalur */}
+      {/* 3. Detail Telemetri On-Demand dengan LOGO Resmi & Rute Lengkap Anti-Bingung */}
       {currentSelectedData && (
-        <div className="absolute bottom-5 right-4 left-4 sm:left-auto sm:w-[420px] z-30 animate-in fade-in slide-in-from-bottom-4 duration-250 pointer-events-auto">
+        <div className="absolute bottom-5 right-4 left-4 sm:left-auto sm:w-[430px] z-30 animate-in fade-in slide-in-from-bottom-4 duration-250 pointer-events-auto">
           <div className="glass-clean-card rounded-xl p-5 shadow-2xl border border-slate-200/90 space-y-4">
             
             {/* Header: Official Vector Logo, Full Genuine Name & Close Button */}
@@ -688,49 +700,84 @@ export default function MapTracker() {
               </button>
             </div>
 
-            {/* Trajectory Info & Legend */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 space-y-2 text-xs">
+            {/* Trajectory & Detailed Navigation Route Section (Crystal Clear for Laypersons) */}
+            <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center space-x-1.5">
+                <span className="text-[11px] uppercase font-bold text-slate-700 tracking-wider flex items-center space-x-1.5">
                   <Route className="w-3.5 h-3.5 text-sky-600" />
-                  <span>Trajektori & Rute Navigasi</span>
+                  <span>Rute Navigasi Lengkap</span>
                 </span>
-                <span className="text-[10px] font-medium text-slate-400">
+                <span className="text-[10px] font-semibold text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-md">
                   {selectedEntity.type === 'plane' ? 'Jalur Penerbangan' : 'Pelayaran Laut'}
                 </span>
               </div>
 
-              {/* Origin -> Destination Route Badge */}
-              <div className="flex items-center justify-between bg-white px-3 py-2 rounded-md border border-slate-200/60 shadow-xs">
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="font-bold text-slate-800">
-                    {currentSelectedData.origin?.code || currentSelectedData.origin?.city || 'Asal'}
+              {/* Origin Airport / Seaport */}
+              <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-xs">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 tracking-wider flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>{selectedEntity.type === 'plane' ? 'Bandara Keberangkatan (Asal)' : 'Pelabuhan Asal'}</span>
                   </span>
+                  {currentSelectedData.origin?.code && (
+                    <span className="text-[11px] font-mono font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
+                      {currentSelectedData.origin.code}
+                    </span>
+                  )}
                 </div>
-                <span className="text-slate-400 font-mono text-[11px]">&rarr;</span>
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                  <span className="font-bold text-slate-800">
-                    {currentSelectedData.destination?.code || currentSelectedData.destination?.city || 'Tujuan'}
-                  </span>
+                <div className="text-xs font-bold text-slate-900">
+                  {currentSelectedData.origin?.city || 'Kota Asal'}, {currentSelectedData.origin?.country}
+                </div>
+                <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+                  {currentSelectedData.origin?.name || 'Bandara Keberangkatan'}
                 </div>
               </div>
 
-              {/* Visual Line Legend */}
-              <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 pt-0.5">
+              {/* Visual Connecting Divider */}
+              <div className="flex items-center justify-center space-x-2 text-[10px] text-slate-400 font-semibold py-0.5">
+                <span className="w-12 h-px bg-slate-300"></span>
+                <span className="flex items-center space-x-1 text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 shadow-2xs">
+                  <span>Sedang Menuju</span>
+                  <ArrowDownRight className="w-3 h-3 text-sky-600" />
+                </span>
+                <span className="w-12 h-px bg-slate-300"></span>
+              </div>
+
+              {/* Destination Airport / Seaport */}
+              <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-xs">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-extrabold uppercase text-rose-600 tracking-wider flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>{selectedEntity.type === 'plane' ? 'Bandara Tujuan (Pendaratan)' : 'Pelabuhan Tujuan'}</span>
+                  </span>
+                  {currentSelectedData.destination?.code && (
+                    <span className="text-[11px] font-mono font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
+                      {currentSelectedData.destination.code}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-900">
+                  {currentSelectedData.destination?.city || 'Kota Tujuan'}, {currentSelectedData.destination?.country}
+                </div>
+                <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+                  {currentSelectedData.destination?.name || 'Bandara Pendaratan'}
+                </div>
+              </div>
+
+              {/* Trajectory Color Legend */}
+              <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 pt-1.5 border-t border-slate-200/60">
                 <div className="flex items-center space-x-1.5">
                   <span className={`w-4 h-0.5 ${selectedEntity.type === 'plane' ? 'bg-amber-500' : 'bg-sky-600'}`}></span>
-                  <span>Jalur Terlewati (Menyambung)</span>
+                  <span>Sudah Dilewati (Garis Lurus)</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <span className={`w-4 h-0.5 border-b-2 border-dashed ${selectedEntity.type === 'plane' ? 'border-amber-500' : 'border-sky-600'}`}></span>
-                  <span>Proyeksi Tujuan (Putus-putus)</span>
+                  <span>Menuju Tujuan (Putus-putus)</span>
                 </div>
               </div>
             </div>
 
-            {/* Metric Stats Cards (Taller & Spacious Dimensions) */}
+            {/* Metric Stats Cards */}
             {selectedEntity.type === 'plane' ? (
               <div className="space-y-3.5">
                 <div className="grid grid-cols-2 gap-2.5">
@@ -879,3 +926,4 @@ export default function MapTracker() {
     </div>
   );
 }
+

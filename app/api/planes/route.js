@@ -11,43 +11,253 @@ if (!globalThis._openskyGlobalState) {
   };
 }
 
-// Major International Hubs Coordinate Directory
+// Major International Hubs Detailed Directory with Complete Airport Names
 const AIRPORT_COORDINATES = {
-  CGK: { code: 'CGK', city: 'Jakarta', name: 'Soekarno-Hatta Intl', country: 'Indonesia', lat: -6.1256, lon: 106.6558 },
-  DPS: { code: 'DPS', city: 'Bali', name: 'I Gusti Ngurah Rai Intl', country: 'Indonesia', lat: -8.7482, lon: 115.1672 },
-  SUB: { code: 'SUB', city: 'Surabaya', name: 'Juanda Intl', country: 'Indonesia', lat: -7.3798, lon: 112.7844 },
-  KNO: { code: 'KNO', city: 'Medan', name: 'Kualanamu Intl', country: 'Indonesia', lat: 3.6422, lon: 98.8853 },
-  UPG: { code: 'UPG', city: 'Makassar', name: 'Sultan Hasanuddin Intl', country: 'Indonesia', lat: -5.0616, lon: 119.5540 },
-  BPN: { code: 'BPN', city: 'Balikpapan', name: 'Sultan Aji Muhammad Sulaiman', country: 'Indonesia', lat: -1.2682, lon: 116.8944 },
-  HLP: { code: 'HLP', city: 'Jakarta Halim', name: 'Halim Perdanakusuma', country: 'Indonesia', lat: -6.2666, lon: 106.8908 },
-  YIA: { code: 'YIA', city: 'Yogyakarta', name: 'Yogyakarta Intl', country: 'Indonesia', lat: -7.9071, lon: 110.0536 },
-  SIN: { code: 'SIN', city: 'Singapore', name: 'Singapore Changi Airport', country: 'Singapore', lat: 1.3644, lon: 103.9915 },
-  KUL: { code: 'KUL', city: 'Kuala Lumpur', name: 'Kuala Lumpur Intl (KLIA)', country: 'Malaysia', lat: 2.7456, lon: 101.7099 },
-  BKK: { code: 'BKK', city: 'Bangkok', name: 'Suvarnabhumi Airport', country: 'Thailand', lat: 13.6900, lon: 100.7501 },
-  MNL: { code: 'MNL', city: 'Manila', name: 'Ninoy Aquino Intl', country: 'Philippines', lat: 14.5086, lon: 121.0194 },
-  HND: { code: 'HND', city: 'Tokyo', name: 'Tokyo Haneda Airport', country: 'Japan', lat: 35.5494, lon: 139.7798 },
-  NRT: { code: 'NRT', city: 'Tokyo Narita', name: 'Narita Intl Airport', country: 'Japan', lat: 35.7720, lon: 140.3929 },
-  ICN: { code: 'ICN', city: 'Seoul', name: 'Incheon Intl Airport', country: 'South Korea', lat: 37.4602, lon: 126.4407 },
-  HKG: { code: 'HKG', city: 'Hong Kong', name: 'Hong Kong Intl Airport', country: 'Hong Kong', lat: 22.3080, lon: 113.9185 },
-  PEK: { code: 'PEK', city: 'Beijing', name: 'Beijing Capital Intl', country: 'China', lat: 40.0799, lon: 116.6031 },
-  PVG: { code: 'PVG', city: 'Shanghai', name: 'Shanghai Pudong Intl', country: 'China', lat: 31.1443, lon: 121.8083 },
-  SYD: { code: 'SYD', city: 'Sydney', name: 'Sydney Kingsford Smith', country: 'Australia', lat: -33.9399, lon: 151.1753 },
-  MEL: { code: 'MEL', city: 'Melbourne', name: 'Melbourne Tullamarine', country: 'Australia', lat: -37.6690, lon: 144.8410 },
-  DXB: { code: 'DXB', city: 'Dubai', name: 'Dubai Intl Airport', country: 'United Arab Emirates', lat: 25.2532, lon: 55.3657 },
-  DOH: { code: 'DOH', city: 'Doha', name: 'Hamad Intl Airport', country: 'Qatar', lat: 25.2731, lon: 51.6081 },
-  IST: { code: 'IST', city: 'Istanbul', name: 'Istanbul Airport', country: 'Turkey', lat: 41.2753, lon: 28.7519 },
-  LHR: { code: 'LHR', city: 'London', name: 'London Heathrow Airport', country: 'United Kingdom', lat: 51.4700, lon: -0.4543 },
-  CDG: { code: 'CDG', city: 'Paris', name: 'Charles de Gaulle Airport', country: 'France', lat: 49.0097, lon: 2.5479 },
-  AMS: { code: 'AMS', city: 'Amsterdam', name: 'Amsterdam Airport Schiphol', country: 'Netherlands', lat: 52.3105, lon: 4.7683 },
-  FRA: { code: 'FRA', city: 'Frankfurt', name: 'Frankfurt am Main Airport', country: 'Germany', lat: 50.0379, lon: 8.5622 },
-  JFK: { code: 'JFK', city: 'New York', name: 'John F. Kennedy Intl', country: 'United States', lat: 40.6413, lon: -73.7781 },
-  LAX: { code: 'LAX', city: 'Los Angeles', name: 'Los Angeles Intl Airport', country: 'United States', lat: 33.9416, lon: -118.4085 },
-  SFO: { code: 'SFO', city: 'San Francisco', name: 'San Francisco Intl Airport', country: 'United States', lat: 37.6213, lon: -122.3790 },
+  CGK: {
+    code: 'CGK',
+    city: 'Jakarta',
+    country: 'Indonesia',
+    name: 'Bandara Internasional Soekarno-Hatta',
+    lat: -6.1256,
+    lon: 106.6558
+  },
+  DPS: {
+    code: 'DPS',
+    city: 'Denpasar, Bali',
+    country: 'Indonesia',
+    name: 'Bandara Internasional I Gusti Ngurah Rai',
+    lat: -8.7482,
+    lon: 115.1672
+  },
+  SUB: {
+    code: 'SUB',
+    city: 'Surabaya, Jawa Timur',
+    country: 'Indonesia',
+    name: 'Bandara Internasional Juanda',
+    lat: -7.3798,
+    lon: 112.7844
+  },
+  KNO: {
+    code: 'KNO',
+    city: 'Medan, Sumatra Utara',
+    country: 'Indonesia',
+    name: 'Bandara Internasional Kualanamu',
+    lat: 3.6422,
+    lon: 98.8853
+  },
+  UPG: {
+    code: 'UPG',
+    city: 'Makassar, Sulawesi Selatan',
+    country: 'Indonesia',
+    name: 'Bandara Internasional Sultan Hasanuddin',
+    lat: -5.0616,
+    lon: 119.5540
+  },
+  BPN: {
+    code: 'BPN',
+    city: 'Balikpapan, Kalimantan Timur',
+    country: 'Indonesia',
+    name: 'Bandara Internasional Sultan Aji Muhammad Sulaiman Sepinggan',
+    lat: -1.2682,
+    lon: 116.8944
+  },
+  HLP: {
+    code: 'HLP',
+    city: 'Jakarta Timur',
+    country: 'Indonesia',
+    name: 'Bandara Halim Perdanakusuma',
+    lat: -6.2666,
+    lon: 106.8908
+  },
+  YIA: {
+    code: 'YIA',
+    city: 'Yogyakarta',
+    country: 'Indonesia',
+    name: 'Bandara Internasional Yogyakarta (Kulon Progo)',
+    lat: -7.9071,
+    lon: 110.0536
+  },
+  SIN: {
+    code: 'SIN',
+    city: 'Singapura',
+    country: 'Singapura',
+    name: 'Bandara Internasional Changi',
+    lat: 1.3644,
+    lon: 103.9915
+  },
+  KUL: {
+    code: 'KUL',
+    city: 'Kuala Lumpur',
+    country: 'Malaysia',
+    name: 'Bandara Internasional Kuala Lumpur (KLIA)',
+    lat: 2.7456,
+    lon: 101.7099
+  },
+  BKK: {
+    code: 'BKK',
+    city: 'Bangkok',
+    country: 'Thailand',
+    name: 'Bandara Internasional Suvarnabhumi',
+    lat: 13.6900,
+    lon: 100.7501
+  },
+  MNL: {
+    code: 'MNL',
+    city: 'Manila',
+    country: 'Filipina',
+    name: 'Bandara Internasional Ninoy Aquino',
+    lat: 14.5086,
+    lon: 121.0194
+  },
+  HND: {
+    code: 'HND',
+    city: 'Tokyo',
+    country: 'Jepang',
+    name: 'Bandara Internasional Haneda',
+    lat: 35.5494,
+    lon: 139.7798
+  },
+  NRT: {
+    code: 'NRT',
+    city: 'Tokyo',
+    country: 'Jepang',
+    name: 'Bandara Internasional Narita',
+    lat: 35.7720,
+    lon: 140.3929
+  },
+  ICN: {
+    code: 'ICN',
+    city: 'Seoul',
+    country: 'Korea Selatan',
+    name: 'Bandara Internasional Incheon',
+    lat: 37.4602,
+    lon: 126.4407
+  },
+  HKG: {
+    code: 'HKG',
+    city: 'Hong Kong',
+    country: 'Hong Kong',
+    name: 'Bandara Internasional Hong Kong (Chek Lap Kok)',
+    lat: 22.3080,
+    lon: 113.9185
+  },
+  PEK: {
+    code: 'PEK',
+    city: 'Beijing',
+    country: 'China',
+    name: 'Bandara Internasional Ibu Kota Beijing',
+    lat: 40.0799,
+    lon: 116.6031
+  },
+  PVG: {
+    code: 'PVG',
+    city: 'Shanghai',
+    country: 'China',
+    name: 'Bandara Internasional Pudong Shanghai',
+    lat: 31.1443,
+    lon: 121.8083
+  },
+  SYD: {
+    code: 'SYD',
+    city: 'Sydney',
+    country: 'Australia',
+    name: 'Bandara Internasional Kingsford Smith',
+    lat: -33.9399,
+    lon: 151.1753
+  },
+  MEL: {
+    code: 'MEL',
+    city: 'Melbourne',
+    country: 'Australia',
+    name: 'Bandara Internasional Tullamarine',
+    lat: -37.6690,
+    lon: 144.8410
+  },
+  DXB: {
+    code: 'DXB',
+    city: 'Dubai',
+    country: 'Uni Emirat Arab',
+    name: 'Bandara Internasional Dubai',
+    lat: 25.2532,
+    lon: 55.3657
+  },
+  DOH: {
+    code: 'DOH',
+    city: 'Doha',
+    country: 'Qatar',
+    name: 'Bandara Internasional Hamad',
+    lat: 25.2731,
+    lon: 51.6081
+  },
+  IST: {
+    code: 'IST',
+    city: 'Istanbul',
+    country: 'Turki',
+    name: 'Bandara Internasional Istanbul',
+    lat: 41.2753,
+    lon: 28.7519
+  },
+  LHR: {
+    code: 'LHR',
+    city: 'London',
+    country: 'Inggris',
+    name: 'Bandara Internasional Heathrow',
+    lat: 51.4700,
+    lon: -0.4543
+  },
+  CDG: {
+    code: 'CDG',
+    city: 'Paris',
+    country: 'Perancis',
+    name: 'Bandara Internasional Charles de Gaulle',
+    lat: 49.0097,
+    lon: 2.5479
+  },
+  AMS: {
+    code: 'AMS',
+    city: 'Amsterdam',
+    country: 'Belanda',
+    name: 'Bandara Internasional Schiphol',
+    lat: 52.3105,
+    lon: 4.7683
+  },
+  FRA: {
+    code: 'FRA',
+    city: 'Frankfurt',
+    country: 'Jerman',
+    name: 'Bandara Internasional Frankfurt am Main',
+    lat: 50.0379,
+    lon: 8.5622
+  },
+  JFK: {
+    code: 'JFK',
+    city: 'New York',
+    country: 'Amerika Serikat',
+    name: 'Bandara Internasional John F. Kennedy',
+    lat: 40.6413,
+    lon: -73.7781
+  },
+  LAX: {
+    code: 'LAX',
+    city: 'Los Angeles',
+    country: 'Amerika Serikat',
+    name: 'Bandara Internasional Los Angeles',
+    lat: 33.9416,
+    lon: -118.4085
+  },
+  SFO: {
+    code: 'SFO',
+    city: 'San Francisco',
+    country: 'Amerika Serikat',
+    name: 'Bandara Internasional San Francisco',
+    lat: 37.6213,
+    lon: -122.3790
+  },
 };
 
-// Global active commercial flights fleet across all continents
+// Global Active Fleet
 const WORLDWIDE_ACTIVE_FLEET = [
-  // 🇮🇩 Indonesia & Domestic Trunk Routes
+  // 🇮🇩 Indonesia Trunk Routes
   {
     id: '8a01f1', callsign: 'GIA404', airlineCode: 'GIA', airlineName: 'Garuda Indonesia',
     flightNumber: 'GA-404', aircraftModel: 'Boeing 737-800 NextGen', registration: 'PK-GMC',
@@ -105,7 +315,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.CGK, destination: AIRPORT_COORDINATES.BPN,
   },
 
-  // 🇸🇬 Singapore Airlines Intercontinental & Regional
+  // 🇸🇬 Singapore Airlines Global
   {
     id: '76c81b', callsign: 'SIA958', airlineCode: 'SIA', airlineName: 'Singapore Airlines',
     flightNumber: 'SQ-958', aircraftModel: 'Boeing 787-10 Dreamliner', registration: '9V-SCP',
@@ -121,7 +331,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.SIN, destination: AIRPORT_COORDINATES.LHR,
   },
 
-  // 🇦🇪 Emirates Intercontinental (Asia, Middle East, Americas)
+  // 🇦🇪 Emirates Intercontinental
   {
     id: '896356', callsign: 'UAE356', airlineCode: 'UAE', airlineName: 'Emirates',
     flightNumber: 'EK-356', aircraftModel: 'Boeing 777-300ER', registration: 'A6-EGO',
@@ -137,7 +347,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.DXB, destination: AIRPORT_COORDINATES.JFK,
   },
 
-  // 🇶🇦 Qatar Airways Global
+  // 🇶🇦 Qatar Airways
   {
     id: '760958', callsign: 'QTR958', airlineCode: 'QTR', airlineName: 'Qatar Airways',
     flightNumber: 'QR-958', aircraftModel: 'Airbus A350-1000', registration: 'A7-ANI',
@@ -146,7 +356,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.DOH, destination: AIRPORT_COORDINATES.CGK,
   },
 
-  // 🇦🇺 Qantas Airways (Kangaroo Route)
+  // 🇦🇺 Qantas
   {
     id: '7c0001', callsign: 'QFA1', airlineCode: 'QFA', airlineName: 'Qantas Airways',
     flightNumber: 'QF-1', aircraftModel: 'Boeing 787-9 Dreamliner', registration: 'VH-ZNA',
@@ -187,7 +397,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.HKG, destination: AIRPORT_COORDINATES.LAX,
   },
 
-  // 🇬🇧 British Airways & 🇩🇪 Lufthansa (Transatlantic Corridor)
+  // 🇬🇧 British Airways & 🇩🇪 Lufthansa
   {
     id: '400117', callsign: 'BAW117', airlineCode: 'BAW', airlineName: 'British Airways',
     flightNumber: 'BA-117', aircraftModel: 'Boeing 777-200ER', registration: 'G-VIIA',
@@ -203,7 +413,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.FRA, destination: AIRPORT_COORDINATES.JFK,
   },
 
-  // 🇳🇱 KLM Royal Dutch Airlines
+  // 🇳🇱 KLM
   {
     id: '484835', callsign: 'KLM835', airlineCode: 'KLM', airlineName: 'KLM Royal Dutch Airlines',
     flightNumber: 'KL-835', aircraftModel: 'Boeing 777-300ER', registration: 'PH-BVO',
@@ -212,7 +422,7 @@ const WORLDWIDE_ACTIVE_FLEET = [
     origin: AIRPORT_COORDINATES.AMS, destination: AIRPORT_COORDINATES.DPS,
   },
 
-  // 🇺🇸 United Airlines & Delta Air Lines (Transpacific & Domestic US)
+  // 🇺🇸 United Airlines & Delta Air Lines
   {
     id: 'a00890', callsign: 'UAL890', airlineCode: 'UAL', airlineName: 'United Airlines',
     flightNumber: 'UA-890', aircraftModel: 'Boeing 777-200ER', registration: 'N78001',
@@ -229,11 +439,9 @@ const WORLDWIDE_ACTIVE_FLEET = [
   },
 ];
 
-// Generates flight trail: solid past path (origin to current) + dashed future path (current to destination)
 function generateFlightTrajectory(origin, currentLat, currentLon, destination) {
   if (!origin || !destination) return { pastTrail: [], futureTrail: [] };
 
-  // Calculate waypoints along great-circle line
   const pastSteps = 8;
   const pastTrail = [];
   for (let i = 0; i <= pastSteps; i++) {
@@ -264,7 +472,6 @@ export async function GET() {
   const now = Date.now();
   const state = globalThis._openskyGlobalState;
 
-  // Initialize or update fleet positions via dead-reckoning
   if (state.flights.size === 0) {
     WORLDWIDE_ACTIVE_FLEET.forEach((f) => {
       const { pastTrail, futureTrail } = generateFlightTrajectory(f.origin, f.latitude, f.longitude, f.destination);
@@ -279,7 +486,6 @@ export async function GET() {
     });
   }
 
-  // Real-time kinematic update for worldwide flights
   const activeFlights = advanceWorldwideKinematics(Array.from(state.flights.values()), now);
 
   return NextResponse.json(
@@ -294,7 +500,6 @@ export async function GET() {
   );
 }
 
-// Advances all flights worldwide continuously along their flight paths
 let lastGlobalTime = Date.now();
 function advanceWorldwideKinematics(flights, now) {
   const dt = Math.min((now - lastGlobalTime) / 1000, 10);
@@ -314,11 +519,9 @@ function advanceWorldwideKinematics(flights, now) {
     p.longitude = Number((p.longitude + dLon).toFixed(4));
     p.lastSeen = now;
 
-    // Wrap longitude across 180° meridian smoothly
     if (p.longitude > 180) p.longitude -= 360;
     if (p.longitude < -180) p.longitude += 360;
 
-    // Recalculate past and future trail with current position
     const { pastTrail, futureTrail } = generateFlightTrajectory(p.origin, p.latitude, p.longitude, p.destination);
     p.pastTrail = pastTrail;
     p.futureTrail = futureTrail;

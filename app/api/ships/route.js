@@ -11,27 +11,139 @@ if (!globalThis._shipGlobalState) {
   };
 }
 
-// Global Strategic Seaports Directory
+// Global Strategic Seaports Directory with Complete Names
 const GLOBAL_SEAPORTS = {
-  PRIOK: { code: 'IDTPP', name: 'Pelabuhan Tanjung Priok (Jakarta)', city: 'Jakarta', country: 'Indonesia', lat: -6.1020, lon: 106.8820 },
-  PERAK: { code: 'IDSUB', name: 'Pelabuhan Tanjung Perak (Surabaya)', city: 'Surabaya', country: 'Indonesia', lat: -7.2000, lon: 112.7300 },
-  MERAK: { code: 'IDMRK', name: 'Pelabuhan Merak (Banten)', city: 'Merak', country: 'Indonesia', lat: -5.9320, lon: 105.9980 },
-  BAKAUHENI: { code: 'IDBKH', name: 'Pelabuhan Bakauheni (Lampung)', city: 'Bakauheni', country: 'Indonesia', lat: -5.8680, lon: 105.7520 },
-  BATAM: { code: 'IDBTH', name: 'Pelabuhan Batu Ampar (Batam)', city: 'Batam', country: 'Indonesia', lat: 1.1600, lon: 103.9800 },
-  BALONGAN: { code: 'IDBLN', name: 'Terminal Khusus Migas Balongan', city: 'Indramayu', country: 'Indonesia', lat: -6.3400, lon: 108.3800 },
-  MAKASSAR: { code: 'IDMAK', name: 'Pelabuhan Soekarno-Hatta Makassar', city: 'Makassar', country: 'Indonesia', lat: -5.1200, lon: 119.4100 },
-  SINGAPORE: { code: 'SGSIN', name: 'Port of Singapore (PSA)', city: 'Singapore', country: 'Singapore', lat: 1.2644, lon: 103.8400 },
-  ROTTERDAM: { code: 'NLRTM', name: 'Port of Rotterdam (Europoort)', city: 'Rotterdam', country: 'Netherlands', lat: 51.9500, lon: 4.1400 },
-  SHANGHAI: { code: 'CNSHA', name: 'Port of Shanghai (Yangshan)', city: 'Shanghai', country: 'China', lat: 30.6200, lon: 122.0600 },
-  YANTIAN: { code: 'CNYAT', name: 'Yantian International Container Port', city: 'Shenzhen', country: 'China', lat: 22.5700, lon: 114.2600 },
-  SUEZ: { code: 'EGSUZ', name: 'Suez Canal Northern Anchorage', city: 'Port Said', country: 'Egypt', lat: 31.2500, lon: 32.3200 },
-  HORMUZ: { code: 'OMMKT', name: 'Strait of Hormuz / Ras Tanura', city: 'Persian Gulf', country: 'Saudi Arabia', lat: 26.6500, lon: 50.1500 },
-  SOUTHAMPTON: { code: 'GBSOU', name: 'Port of Southampton', city: 'Southampton', country: 'United Kingdom', lat: 50.8900, lon: -1.4000 },
-  NEWYORK: { code: 'USNYC', name: 'Port of New York & New Jersey', city: 'New York', country: 'United States', lat: 40.6600, lon: -74.1200 },
-  LOSANGELES: { code: 'USLAX', name: 'Port of Los Angeles (San Pedro)', city: 'Los Angeles', country: 'United States', lat: 33.7400, lon: -118.2600 },
+  PRIOK: {
+    code: 'IDTPP',
+    name: 'Pelabuhan Tanjung Priok (Jakarta Utara)',
+    city: 'Jakarta Utara',
+    country: 'Indonesia',
+    lat: -6.1020,
+    lon: 106.8820
+  },
+  PERAK: {
+    code: 'IDSUB',
+    name: 'Pelabuhan Tanjung Perak',
+    city: 'Surabaya, Jawa Timur',
+    country: 'Indonesia',
+    lat: -7.2000,
+    lon: 112.7300
+  },
+  MERAK: {
+    code: 'IDMRK',
+    name: 'Pelabuhan Penyeberangan Merak',
+    city: 'Cilegon, Banten',
+    country: 'Indonesia',
+    lat: -5.9320,
+    lon: 105.9980
+  },
+  BAKAUHENI: {
+    code: 'IDBKH',
+    name: 'Pelabuhan Penyeberangan Bakauheni',
+    city: 'Lampung Selatan',
+    country: 'Indonesia',
+    lat: -5.8680,
+    lon: 105.7520
+  },
+  BATAM: {
+    code: 'IDBTH',
+    name: 'Pelabuhan Batu Ampar',
+    city: 'Batam, Kepulauan Riau',
+    country: 'Indonesia',
+    lat: 1.1600,
+    lon: 103.9800
+  },
+  BALONGAN: {
+    code: 'IDBLN',
+    name: 'Terminal Khusus Migas Kilang Balongan',
+    city: 'Indramayu, Jawa Barat',
+    country: 'Indonesia',
+    lat: -6.3400,
+    lon: 108.3800
+  },
+  MAKASSAR: {
+    code: 'IDMAK',
+    name: 'Pelabuhan Soekarno-Hatta Makassar',
+    city: 'Makassar, Sulawesi Selatan',
+    country: 'Indonesia',
+    lat: -5.1200,
+    lon: 119.4100
+  },
+  SINGAPORE: {
+    code: 'SGSIN',
+    name: 'Pelabuhan Internasional Singapura (PSA Port)',
+    city: 'Singapura',
+    country: 'Singapura',
+    lat: 1.2644,
+    lon: 103.8400
+  },
+  ROTTERDAM: {
+    code: 'NLRTM',
+    name: 'Pelabuhan Internasional Rotterdam (Europoort)',
+    city: 'Rotterdam',
+    country: 'Belanda',
+    lat: 51.9500,
+    lon: 4.1400
+  },
+  SHANGHAI: {
+    code: 'CNSHA',
+    name: 'Pelabuhan Shanghai (Yangshan Deep-Water Port)',
+    city: 'Shanghai',
+    country: 'China',
+    lat: 30.6200,
+    lon: 122.0600
+  },
+  YANTIAN: {
+    code: 'CNYAT',
+    name: 'Pelabuhan Kontainer Yantian',
+    city: 'Shenzhen',
+    country: 'China',
+    lat: 22.5700,
+    lon: 114.2600
+  },
+  SUEZ: {
+    code: 'EGSUZ',
+    name: 'Pintu Masuk Terusan Suez (Port Said Anchorage)',
+    city: 'Port Said',
+    country: 'Mesir',
+    lat: 31.2500,
+    lon: 32.3200
+  },
+  HORMUZ: {
+    code: 'OMMKT',
+    name: 'Terminal Minyak Selat Hormuz / Ras Tanura',
+    city: 'Teluk Persia',
+    country: 'Arab Saudi',
+    lat: 26.6500,
+    lon: 50.1500
+  },
+  SOUTHAMPTON: {
+    code: 'GBSOU',
+    name: 'Pelabuhan Kapal Pesiar Southampton',
+    city: 'Southampton',
+    country: 'Inggris',
+    lat: 50.8900,
+    lon: -1.4000
+  },
+  NEWYORK: {
+    code: 'USNYC',
+    name: 'Pelabuhan New York & New Jersey',
+    city: 'New York',
+    country: 'Amerika Serikat',
+    lat: 40.6600,
+    lon: -74.1200
+  },
+  LOSANGELES: {
+    code: 'USLAX',
+    name: 'Pelabuhan Los Angeles & Long Beach',
+    city: 'California',
+    country: 'Amerika Serikat',
+    lat: 33.7400,
+    lon: -118.2600
+  },
 };
 
-// Worldwide active commercial and passenger vessels
+// Worldwide Active Vessels
 const WORLDWIDE_ACTIVE_VESSELS = [
   // 🇮🇩 Indonesian Maritime Arteries
   {
@@ -126,7 +238,6 @@ const WORLDWIDE_ACTIVE_VESSELS = [
   },
 ];
 
-// Generates solid past trail (origin to current) + dashed future trail (current to destination)
 function generateShipTrajectory(origin, currentLat, currentLon, destination) {
   if (!origin || !destination) return { pastTrail: [], futureTrail: [] };
 
