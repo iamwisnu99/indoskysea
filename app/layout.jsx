@@ -9,10 +9,74 @@ export const viewport = {
 };
 
 export const metadata = {
-  title: 'IndoSkySea: ADS-B & AIS Real-Time Tracker',
-  description: 'Pelacakan real-time penerbangan (ADS-B) dan lalu lintas maritim kapal (AIS) di Indonesia dan dunia dengan peta Google Maps.',
-  keywords: ['ADS-B', 'AIS', 'Flight Radar Indonesia', 'Ship Tracker', 'IndoSkySea', 'Google Maps Leaflet', 'PWA'],
-  authors: [{ name: 'IndoSkySea Team' }],
+  metadataBase: new URL('https://indoskysea.vercel.app'),
+  title: {
+    default: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
+    template: '%s | IndoSkySea',
+  },
+  description: 'Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia. Pantau pesawat komersial, kapal pesiar samudra, armada PELNI, dan kapal pertahanan di Google Maps.',
+  keywords: [
+    'IndoSkySea',
+    'Flight Radar Indonesia',
+    'Ship Tracker Real-Time',
+    'Pelacakan Pesawat Real-Time',
+    'Radar Kapal Laut AIS',
+    'ADS-B Tracker',
+    'Kapal Pesiar Cruise Tracker',
+    'PELNI Tracker',
+    'Google Maps Flight Radar',
+    'Live Maritime Tracker',
+    'OpenSky ADS-B',
+    'AIS Maritime',
+    'PWA Radar',
+  ],
+  authors: [{ name: 'IndoSkySea Team', url: 'https://github.com/iamwisnu99/indoskysea' }],
+  creator: 'IndoSkySea',
+  publisher: 'IndoSkySea',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: 'https://indoskysea.vercel.app',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    url: 'https://indoskysea.vercel.app',
+    siteName: 'IndoSkySea',
+    title: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
+    description: 'Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia. Pantau pesawat komersial, kapal pesiar samudra, armada PELNI, dan kapal pertahanan di Google Maps.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'IndoSkySea: Radar Pesawat & Kapal Real-Time',
+    description: 'Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia dengan peta interaktif Google Maps.',
+    images: ['/og-image.png'],
+    creator: '@indoskysea',
+    site: '@indoskysea',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: '/site.webmanifest',
   icons: {
     icon: [
@@ -35,6 +99,32 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id" className="light">
       <head>
+        {/* Open Graph & Social Media Preview Meta (WhatsApp, Telegram, Facebook, LinkedIn, Twitter/X, Instagram) */}
+        <meta property="og:site_name" content="IndoSkySea" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://indoskysea.vercel.app" />
+        <meta property="og:title" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
+        <meta property="og:description" content="Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia. Pantau pesawat komersial, kapal pesiar samudra, armada PELNI, dan kapal pertahanan di Google Maps." />
+        <meta property="og:image" content="https://indoskysea.vercel.app/og-image.png" />
+        <meta property="og:image:secure_url" content="https://indoskysea.vercel.app/og-image.png" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
+        <meta property="og:locale" content="id_ID" />
+
+        {/* Twitter / X Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@indoskysea" />
+        <meta name="twitter:creator" content="@indoskysea" />
+        <meta name="twitter:title" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
+        <meta name="twitter:description" content="Aplikasi pelacakan penerbangan (ADS-B) dan armada maritim (AIS) real-time global dan Indonesia dengan peta interaktif Google Maps." />
+        <meta name="twitter:image" content="https://indoskysea.vercel.app/og-image.png" />
+        <meta name="twitter:image:alt" content="IndoSkySea: Radar Pesawat &amp; Kapal Real-Time" />
+
+        {/* Canonical URL Link */}
+        <link rel="canonical" href="https://indoskysea.vercel.app" />
+
         {/* Favicon & Icons */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
