@@ -657,14 +657,14 @@ export default function MapTracker() {
       {/* 1. Leaflet Map with Google Maps Tiles */}
       <div id="radar-map" ref={mapContainerRef} className="w-full h-full z-0 cursor-grab active:cursor-grabbing" />
 
-      {/* 2. Top Floating Header & Filter Bar (Fully Responsive & Clean Hierarchy) */}
+      {/* 2. Top Floating Header & Filter Bar (Unified 1 Row on Desktop, Ergonomic 2 Rows on Mobile) */}
       <div className="absolute top-2.5 left-2.5 right-2.5 sm:top-4 sm:left-4 sm:right-4 z-20 flex flex-col space-y-2 pointer-events-none">
         
-        {/* Main Header Bar */}
+        {/* Main Unified Header Bar */}
         <div className="flex items-center justify-between gap-1.5 sm:gap-2 pointer-events-none w-full">
           
-          {/* Left: Brand & Desktop Search */}
-          <div className="flex items-center space-x-2 pointer-events-auto shrink-0">
+          {/* Left: Brand & Search */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2 pointer-events-auto shrink-0">
             {/* Brand Badge */}
             <div className="glass-clean rounded-xl px-2.5 sm:px-4 h-9 sm:h-11 flex items-center space-x-2 sm:space-x-2.5 shadow-sm">
               <span className="relative flex h-2 sm:h-2.5 w-2 sm:w-2.5">
@@ -680,64 +680,101 @@ export default function MapTracker() {
             <div className="relative hidden lg:block">
               <input
                 type="text"
-                placeholder="Cari Pesawat, Maskapai, Kapal, Bandara..."
+                placeholder="Cari Pesawat, Maskapai, Kapal..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="glass-clean pl-10 pr-9 h-11 text-xs rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-64 transition-all shadow-sm"
+                className="glass-clean pl-9 pr-8 h-10 md:h-11 text-xs rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-44 xl:w-56 transition-all shadow-sm"
               />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3.5 md:top-4" />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2.5 top-3.5 md:top-4 text-slate-400 hover:text-slate-600"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Right: Controls & Toggles */}
+          {/* Desktop Center: Unified Entity Toggles + Regional Filters (Single Row on Desktop >= lg) */}
+          <div className="hidden lg:flex items-center space-x-1 xl:space-x-1.5 glass-clean p-1 rounded-xl shadow-sm pointer-events-auto shrink-0 overflow-x-auto no-scrollbar">
+            
+            {/* Toggle Pesawat */}
+            <button
+              onClick={() => setShowPlanes(!showPlanes)}
+              className={`h-9 px-2.5 xl:px-3 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all shrink-0 ${
+                showPlanes
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+              }`}
+            >
+              <Plane className="w-3.5 h-3.5 shrink-0" />
+              <span>Pesawat</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${showPlanes ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                {planes.length}
+              </span>
+            </button>
+
+            {/* Toggle Kapal */}
+            <button
+              onClick={() => setShowShips(!showShips)}
+              className={`h-9 px-2.5 xl:px-3 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all shrink-0 ${
+                showShips
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+              }`}
+            >
+              <Ship className="w-3.5 h-3.5 shrink-0" />
+              <span>Kapal</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${showShips ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                {ships.length}
+              </span>
+            </button>
+
+            {/* Subtle Divider */}
+            <div className="h-4.5 w-px bg-slate-300/80 mx-0.5 shrink-0" />
+
+            {/* Regional Presets with Flags */}
+            {REGION_PRESETS.map((preset) => {
+              const FlagComponent = preset.flag;
+              const isActive = activeRegion === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => handleJumpRegion(preset)}
+                  className={`h-9 px-2.5 xl:px-3 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all shrink-0 whitespace-nowrap ${
+                    isActive
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                  }`}
+                >
+                  <FlagComponent className="w-4 h-2.5 shrink-0" />
+                  <span>{preset.name}</span>
+                </button>
+              );
+            })}
+
+            {/* Subtle Divider */}
+            <div className="h-4.5 w-px bg-slate-300/80 mx-0.5 shrink-0" />
+
+            {/* Disclaimer Button in Desktop Ribbon */}
+            <button
+              onClick={() => setShowDisclaimerModal(true)}
+              className="h-9 px-2.5 rounded-lg text-xs font-semibold flex items-center space-x-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all shrink-0 whitespace-nowrap"
+              title="Ketentuan Penggunaan & Disclaimer"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Disclaimer</span>
+            </button>
+          </div>
+
+          {/* Right: Quick Action Controls */}
           <div className="flex items-center space-x-1.5 pointer-events-auto shrink-0">
-            {/* Desktop-only Entity Toggles (On mobile, these live in the filter rail below for maximum responsiveness) */}
-            <div className="hidden md:flex items-center space-x-1.5">
-              {/* Toggle Pesawat (Desktop) */}
-              <button
-                onClick={() => setShowPlanes(!showPlanes)}
-                className={`h-10 md:h-11 px-3 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm ${
-                  showPlanes
-                    ? 'bg-amber-500 text-white shadow-amber-500/25'
-                    : 'bg-white/95 text-slate-500 hover:bg-white hover:text-slate-700 border border-slate-200/90'
-                }`}
-              >
-                <Plane className="w-4 h-4 shrink-0" />
-                <span>Pesawat</span>
-                <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded-md font-bold ${showPlanes ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                  {planes.length}
-                </span>
-              </button>
-
-              {/* Toggle Kapal (Desktop) */}
-              <button
-                onClick={() => setShowShips(!showShips)}
-                className={`h-10 md:h-11 px-3 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm ${
-                  showShips
-                    ? 'bg-sky-600 text-white shadow-sky-600/25'
-                    : 'bg-white/95 text-slate-500 hover:bg-white hover:text-slate-700 border border-slate-200/90'
-                }`}
-              >
-                <Ship className="w-4 h-4 shrink-0" />
-                <span>Kapal</span>
-                <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded-md font-bold ${showShips ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                  {ships.length}
-                </span>
-              </button>
-            </div>
-
             {/* Mobile Search Toggle Button (< lg) */}
             <button
               onClick={() => setShowMobileSearch(!showMobileSearch)}
-              className={`lg:hidden w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center transition-all shadow-sm ${
+              className={`lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all shadow-sm ${
                 showMobileSearch || searchQuery
                   ? 'bg-sky-600 text-white shadow-sky-600/25'
                   : 'glass-clean text-slate-600 hover:text-sky-600'
@@ -747,7 +784,7 @@ export default function MapTracker() {
               <Search className="w-4 h-4" />
             </button>
 
-            {/* PWA Install Button (Works on Windows, Android & iOS Guide) */}
+            {/* PWA Install Button */}
             <button
               onClick={() => setShowInstallModal(true)}
               className="glass-clean w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl text-slate-600 hover:text-sky-600 flex items-center justify-center transition-colors shadow-sm"
@@ -802,12 +839,12 @@ export default function MapTracker() {
           </div>
         )}
 
-        {/* Filter Strip: Unified Entity Toggles + Regional Presets with Authentic Flag Icons + Disclaimer */}
-        <div className="pointer-events-auto max-w-full">
+        {/* Mobile-Only Filter Strip (Only shown on < lg screens. On desktop, this is unified into 1 line above!) */}
+        <div className="lg:hidden pointer-events-auto max-w-full">
           <div className="glass-clean p-1 rounded-xl shadow-sm flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto no-scrollbar max-w-full">
             
-            {/* Mobile Entity Toggles (Displayed prominently here on mobile for one-tap ergonomic access) */}
-            <div className="md:hidden flex items-center space-x-1 shrink-0">
+            {/* Mobile Entity Toggles */}
+            <div className="flex items-center space-x-1 shrink-0">
               {/* Toggle Pesawat (Mobile) */}
               <button
                 onClick={() => setShowPlanes(!showPlanes)}
@@ -871,7 +908,7 @@ export default function MapTracker() {
             {/* Disclaimer & Info Button */}
             <button
               onClick={() => setShowDisclaimerModal(true)}
-              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0 whitespace-nowrap text-slate-600 hover:text-amber-700 hover:bg-amber-50/80"
+              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
               title="Ketentuan Penggunaan & Disclaimer"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
