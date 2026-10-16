@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ShieldAlert, CheckCircle2, AlertTriangle, Radio, ExternalLink, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X } from 'lucide-react';
 
 export default function DisclaimerModal({ isOpen, onClose, onAccept }) {
   const [agreed, setAgreed] = useState(false);
@@ -14,137 +14,114 @@ export default function DisclaimerModal({ isOpen, onClose, onAccept }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-5 bg-slate-950/65 backdrop-blur-md animate-in fade-in duration-200 select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-150 select-none">
       <div 
-        className="relative w-full max-w-lg bg-white/95 rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-xl bg-white rounded-xl shadow-xl border border-slate-300 overflow-hidden flex flex-col max-h-[88vh] animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         aria-labelledby="disclaimer-title"
       >
-        {/* Header Ribbon */}
-        <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 px-5 py-4 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
-              <ShieldAlert className="w-5 h-5 text-amber-400 animate-pulse" />
-            </div>
-            <div>
-              <h2 id="disclaimer-title" className="text-sm sm:text-base font-extrabold tracking-tight text-white flex items-center space-x-1.5">
-                <span>Ketentuan Penggunaan & Disclaimer</span>
-              </h2>
-              <p className="text-[11px] text-sky-200/80 font-medium">
-                IndoSkySea • Pemantauan Radar Non-Komersial
-              </p>
-            </div>
+        {/* Document Header (Clean Legal Paper Style) */}
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shrink-0">
+          <div>
+            <h1 id="disclaimer-title" className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+              Ketentuan Layanan &amp; Pernyataan Sanggahan (Disclaimer)
+            </h1>
+            <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+              Dokumen Ketentuan Penggunaan • IndoSkySea
+            </p>
           </div>
           {onClose && (
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg"
+              className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100"
               title="Tutup"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* Content Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+        {/* Document Body (Clean Markdown Paper Format) */}
+        <div className="p-6 overflow-y-auto space-y-4 text-xs sm:text-[13px] text-slate-700 leading-relaxed font-normal">
           
-          {/* Highlight Notice Box */}
-          <div className="bg-amber-50/90 border border-amber-200/90 rounded-xl p-3.5 flex items-start space-x-3 text-amber-900">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="space-y-1 text-xs">
-              <span className="font-bold text-amber-900 block">Pemberitahuan Penting untuk Pengunjung</span>
-              <p className="text-amber-800 leading-normal">
-                Layanan situs web ini disediakan <strong>sebagaimana adanya (&quot;as is&quot;)</strong> tanpa jaminan komersial. Harap membaca dan memahami ketentuan penggunaan di bawah ini sebelum melanjutkan.
-              </p>
-            </div>
-          </div>
+          {/* Markdown Blockquote */}
+          <blockquote className="border-l-4 border-slate-400 pl-3.5 py-1.5 text-slate-600 bg-slate-50 italic rounded-r">
+            Situs web ini menyajikan visualisasi data telemetri penerbangan (ADS-B) dan maritim (AIS) secara real-time untuk keperluan monitoring publik, riset, dan pemantauan pribadi yang bertanggung jawab.
+          </blockquote>
 
-          {/* Key Points */}
-          <div className="space-y-3 divide-y divide-slate-100">
-            
-            {/* Point 1: As-Is & Non-Commercial */}
-            <div className="pt-2 first:pt-0">
-              <h3 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center space-x-2 mb-1">
-                <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-mono font-bold flex items-center justify-center shrink-0">1</span>
-                <span>Tujuan Monitoring & Non-Komersial</span>
-              </h3>
-              <p className="text-slate-600 text-xs pl-7 leading-normal">
-                Situs ini dibuat semata-mata untuk keperluan <strong>edukasi, riset, pemantauan pribadi</strong>, dan transparansi lalu lintas publik. Tidak ditujukan untuk keuntungan komersial, penjualan data, maupun kepentingan bisnis yang tidak berizin.
-              </p>
-            </div>
+          {/* Section 1 */}
+          <section className="space-y-1">
+            <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+              1. Prinsip Layanan (&quot;As Is&quot;)
+            </h2>
+            <p className="text-slate-600 leading-normal pl-3">
+              Seluruh data pergerakan armada disajikan <strong>sebagaimana adanya (&quot;as is&quot;)</strong> tanpa jaminan kelengkapan atau akurasi mutlak. Informasi bergantung pada ketersediaan sinyal transponder publik dan jaringan stasiun penerima pihak ketiga.
+            </p>
+          </section>
 
-            {/* Point 2: Negative/Irresponsible Use Prohibited */}
-            <div className="pt-3">
-              <h3 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center space-x-2 mb-1">
-                <span className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 text-[11px] font-mono font-bold flex items-center justify-center shrink-0">2</span>
-                <span className="text-rose-950">Larangan Penggunaan Negatif</span>
-              </h3>
-              <p className="text-slate-600 text-xs pl-7 leading-normal">
-                Dilarang keras menyalahgunakan informasi pelacakan ini untuk perbuatan melanggar hukum, ancaman keselamatan penerbangan/pelayaran, tindakan kriminal, atau kepentingan yang tidak bertanggung jawab.
-              </p>
-            </div>
+          {/* Section 2 */}
+          <section className="space-y-1">
+            <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+              2. Batasan &amp; Larangan Penggunaan
+            </h2>
+            <p className="text-slate-600 leading-normal pl-3">
+              Dilarang keras menyalahgunakan informasi dalam situs ini untuk perbuatan melanggar hukum, ancaman terhadap keselamatan transportasi publik, komersialisasi tidak berizin, maupun kepentingan yang tidak bertanggung jawab.
+            </p>
+          </section>
 
-            {/* Point 3: Emergency & Loss Contact Reference */}
-            <div className="pt-3">
-              <h3 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center space-x-2 mb-1">
-                <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 text-[11px] font-mono font-bold flex items-center justify-center shrink-0">3</span>
-                <span>Referensi Darurat & Situasi Loss Contact</span>
-              </h3>
-              <p className="text-slate-600 text-xs pl-7 leading-normal">
-                Data transponder (ADS-B &amp; AIS) dapat dijadikan rujukan pemantauan posisi darurat apabila terjadi kendala komunikasi atau kondisi <em>loss contact</em> dengan pesawat/kapal tujuan yang terdata di sistem, guna membantu verifikasi jejak terakhir yang terpantau jaringan stasiun penerima.
-              </p>
-            </div>
+          {/* Section 3 */}
+          <section className="space-y-1">
+            <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+              3. Pemantauan &amp; Situasi Darurat (Loss Contact)
+            </h2>
+            <p className="text-slate-600 leading-normal pl-3">
+              Layanan ini dapat dimanfaatkan sebagai referensi pemantauan mandiri dan sarana bantu darurat saat terjadi kendala komunikasi atau kondisi <em>loss contact</em> dengan pesawat atau kapal tujuan yang terdata, guna memverifikasi rekaman koordinat dan jejak posisi terakhir yang berhasil ditangkap oleh stasiun radar.
+            </p>
+          </section>
 
-            {/* Point 4: Not Official ATC / VTS */}
-            <div className="pt-3">
-              <h3 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center space-x-2 mb-1">
-                <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-mono font-bold flex items-center justify-center shrink-0">4</span>
-                <span>Bukan Pengganti Sistem Navigasi Resmi</span>
-              </h3>
-              <p className="text-slate-600 text-xs pl-7 leading-normal">
-                Informasi ini <strong>bukan merupakan sistem resmi</strong> <em>Air Traffic Control (ATC)</em> atau <em>Vessel Traffic Service (VTS)</em> otoritas berwenang dan tidak boleh dijadikan acuan tunggal dalam navigasi operasional keselamatan jiwa.
-              </p>
-            </div>
+          {/* Section 4 */}
+          <section className="space-y-1">
+            <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+              4. Peringatan Navigasi Resmi
+            </h2>
+            <p className="text-slate-600 leading-normal pl-3">
+              Situs ini <strong>bukan merupakan pengganti sistem kendali resmi</strong> <em>Air Traffic Control (ATC)</em> ataupun <em>Vessel Traffic Service (VTS)</em>, dan tidak boleh dijadikan acuan tunggal operasional yang berkaitan langsung dengan keselamatan jiwa.
+            </p>
+          </section>
 
-          </div>
+          <hr className="border-slate-200 my-2" />
 
           {/* Acknowledgement Checkbox */}
-          <div className="pt-2">
-            <label className="flex items-start space-x-2.5 cursor-pointer bg-slate-50 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-200 transition-colors">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded text-sky-600 focus:ring-sky-500 border-slate-300 cursor-pointer shrink-0"
-              />
-              <span className="text-xs font-semibold text-slate-800 leading-normal select-none">
-                Saya telah membaca, memahami, dan menyetujui seluruh ketentuan di atas serta bertanggung jawab penuh atas penggunaan situs ini.
-              </span>
-            </label>
-          </div>
+          <label className="flex items-start space-x-2.5 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 cursor-pointer shrink-0"
+            />
+            <span className="text-xs text-slate-800 leading-normal select-none">
+              Saya telah membaca, memahami, dan menyetujui seluruh ketentuan layanan serta batasan penggunaan di atas.
+            </span>
+          </label>
 
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
-          <div className="text-[11px] text-slate-500 flex items-center space-x-1.5 self-start sm:self-center">
-            <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-            <span>IndoSkySea Global & Nusantara Tracker</span>
-          </div>
-
+        {/* Document Footer */}
+        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+          <span className="text-[11px] text-slate-500 font-mono">
+            {agreed ? '✓ Ketentuan telah disetujui' : 'Menunggu persetujuan pengguna'}
+          </span>
           <button
             onClick={handleConfirm}
             disabled={!agreed}
-            className={`w-full sm:w-auto h-11 px-5 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-md ${
+            className={`px-5 h-9 rounded-lg font-semibold text-xs transition-all ${
               agreed
-                ? 'bg-slate-900 hover:bg-slate-800 text-white cursor-pointer active:scale-98'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                ? 'bg-slate-900 hover:bg-slate-800 text-white cursor-pointer shadow-xs active:scale-98'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Saya Mengerti & Lanjutkan</span>
+            Setuju &amp; Lanjutkan
           </button>
         </div>
 

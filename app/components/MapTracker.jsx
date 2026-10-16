@@ -884,9 +884,9 @@ export default function MapTracker() {
       {/* 3. Detail Telemetri / Mobile Bottom Sheet */}
       {currentSelectedData && (
         <div
-          className={`fixed z-30 transition-all duration-300 ease-out pointer-events-auto
-            /* Desktop (md: and above): Floating Card */
-            md:bottom-5 md:right-4 md:left-auto md:w-[430px] md:max-h-[85vh] md:rounded-2xl md:shadow-2xl md:border md:border-slate-200/90
+          className={`fixed z-30 transition-all duration-300 ease-out pointer-events-auto flex flex-col
+            /* Desktop (md: and above): Floating Card with strictly bounded height for smooth scrolling */
+            md:bottom-5 md:right-4 md:left-auto md:w-[430px] md:h-[82vh] md:max-h-[82vh] md:rounded-2xl md:shadow-2xl md:border md:border-slate-200/90 md:overflow-hidden
             /* Mobile (< md:): Full-width Bottom Sheet docked at bottom, left-0, right-0, with rounded corners at top-left & top-right ONLY */
             max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-[28px] max-md:rounded-b-none max-md:shadow-[0_-10px_35px_rgba(0,0,0,0.14)]
             ${mobileSheetExpanded
@@ -895,7 +895,7 @@ export default function MapTracker() {
             }
           `}
         >
-          <div className="glass-clean-card h-full md:rounded-2xl max-md:rounded-t-[28px] max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:border-t max-md:border-slate-200/90 flex flex-col overflow-hidden bg-white/95 backdrop-blur-xl">
+          <div className="glass-clean-card flex-1 min-h-0 md:rounded-2xl max-md:rounded-t-[28px] max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:border-t max-md:border-slate-200/90 flex flex-col overflow-hidden bg-white/95 backdrop-blur-xl">
             
             {/* Mobile Pull Handle Pill (Minimal sleek pill bar, no text, rounded top) */}
             <div
@@ -984,7 +984,7 @@ export default function MapTracker() {
             )}
 
             {/* Scrollable Full Details (Visible on Desktop OR when Mobile Sheet is Expanded) */}
-            <div className={`flex-1 overflow-y-auto p-4 sm:p-5 max-md:pb-10 space-y-4 ${!mobileSheetExpanded ? 'hidden md:block' : 'block'}`}>
+            <div className={`flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 ${!mobileSheetExpanded ? 'hidden md:block' : 'block'}`}>
               
               {/* Trajectory & Detailed Navigation Route Section */}
               <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3.5 space-y-2.5 text-xs">
@@ -1142,22 +1142,26 @@ export default function MapTracker() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={handleCenterOnEntity}
-                    className="w-full h-11 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center justify-center space-x-2 transition-all shadow-md active:scale-98"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span>Kunci Kamera ke Pesawat Ini</span>
-                  </button>
-
-                  {/* Mobile Collapse Button */}
-                  <button
-                    onClick={() => setMobileSheetExpanded(false)}
-                    className="md:hidden w-full h-10 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all mt-2"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                    <span>Ciutkan Detail</span>
-                  </button>
+                  <div className="text-xs text-slate-600 divide-y divide-slate-100">
+                    <div className="flex justify-between py-2">
+                      <span className="text-slate-400">Kode Registrasi (Ekor):</span>
+                      <span className="font-mono font-semibold text-slate-800">{currentSelectedData.registration || 'AIRCRAFT'}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-slate-400">Model Pesawat:</span>
+                      <span className="font-semibold text-slate-800">{currentSelectedData.aircraftModel}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-slate-400">Squawk Transponder:</span>
+                      <span className="font-mono font-semibold text-slate-800">{currentSelectedData.squawk || '1200'}</span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-slate-400">Posisi Koordinat Real-Time:</span>
+                      <span className="font-mono text-slate-700">
+                        {currentSelectedData.latitude.toFixed(4)}, {currentSelectedData.longitude.toFixed(4)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 /* Vessel Details */
@@ -1205,25 +1209,34 @@ export default function MapTracker() {
                       </span>
                     </div>
                   </div>
-
-                  <button
-                    onClick={handleCenterOnEntity}
-                    className="w-full h-11 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold flex items-center justify-center space-x-2 transition-all shadow-md active:scale-98"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span>Kunci Kamera ke Kapal Ini</span>
-                  </button>
-
-                  {/* Mobile Collapse Button */}
-                  <button
-                    onClick={() => setMobileSheetExpanded(false)}
-                    className="md:hidden w-full h-10 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all mt-2"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                    <span>Ciutkan Detail</span>
-                  </button>
                 </div>
               )}
+            </div>
+
+            {/* Sticky Action Footer: Kunci Kamera ke Armada (Always visible on desktop and expanded mobile) */}
+            <div className={`p-3.5 sm:p-4 border-t border-slate-100/90 bg-white/95 backdrop-blur-md shrink-0 ${!mobileSheetExpanded ? 'hidden md:block' : 'block'}`}>
+              <button
+                onClick={handleCenterOnEntity}
+                className={`w-full h-11 rounded-xl text-white text-xs font-bold flex items-center justify-center space-x-2 transition-all shadow-md active:scale-98 cursor-pointer ${
+                  selectedEntity.type === 'plane'
+                    ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20'
+                    : 'bg-sky-600 hover:bg-sky-700 shadow-sky-600/20'
+                }`}
+              >
+                <Navigation className="w-4 h-4 text-sky-400" />
+                <span>
+                  {selectedEntity.type === 'plane' ? 'Kunci Kamera ke Pesawat Ini' : 'Kunci Kamera ke Kapal Ini'}
+                </span>
+              </button>
+
+              {/* Mobile Collapse Button */}
+              <button
+                onClick={() => setMobileSheetExpanded(false)}
+                className="md:hidden w-full h-9 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all mt-2 cursor-pointer"
+              >
+                <ChevronDown className="w-4 h-4" />
+                <span>Ciutkan Detail</span>
+              </button>
             </div>
           </div>
         </div>
