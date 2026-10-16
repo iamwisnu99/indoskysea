@@ -9,14 +9,14 @@ export const viewport = {
 
 export const metadata = {
   title: 'Nusantara Radar: ADS-B & AIS Real-Time Tracker',
-  description: 'Pelacakan real-time penerbangan (ADS-B OpenSky) dan lalu lintas maritim kapal (AIS AISStream) di Indonesia dan Asia Tenggara dengan peta interaktif.',
-  keywords: ['ADS-B', 'AIS', 'Flight Radar Indonesia', 'Ship Tracker', 'OpenSky', 'Aisstream', 'Next.js Leaflet'],
+  description: 'Pelacakan real-time penerbangan (ADS-B OpenSky) dan lalu lintas maritim kapal (AIS AISStream) di Indonesia dan Asia Tenggara dengan peta Google Maps.',
+  keywords: ['ADS-B', 'AIS', 'Flight Radar Indonesia', 'Ship Tracker', 'Google Maps Leaflet'],
   authors: [{ name: 'Nusantara Radar Team' }],
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" className="dark">
+    <html lang="id" className="light">
       <head>
         <link
           rel="stylesheet"
@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-radar-bg text-slate-100 min-h-screen overflow-hidden select-none font-sans">
+      <body className="bg-slate-50 text-slate-900 min-h-screen overflow-hidden select-none font-sans">
         {children}
       </body>
     </html>
