@@ -62,6 +62,8 @@ export default function MapTracker() {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const tileLayerRef = useRef(null);
+  const leafletModuleRef = useRef(null);
+  const isMapInteractingRef = useRef(false);
   const planeMarkersRef = useRef(new Map());
   const shipMarkersRef = useRef(new Map());
 
@@ -154,35 +156,45 @@ export default function MapTracker() {
   // Initialize Leaflet Map with Google Maps
   useEffect(() => {
     let isMounted = true;
+    let handleResize = null;
 
     async function initMap() {
       if (typeof window === 'undefined') return;
       if (mapInstanceRef.current || !mapContainerRef.current) return;
 
       const L = (await import('leaflet')).default;
+      if (!isMounted) return;
+      leafletModuleRef.current = L;
 
-      // Default Indonesia View with Canvas rendering & mid-range GPU optimization
+      // Default Indonesia View with Canvas rendering & mobile GPU optimization
       const map = L.map(mapContainerRef.current, {
         center: [-2.5489, 118.0149],
-        zoom: 4.8,
+        zoom: 5,
         zoomControl: false,
         attributionControl: true,
         minZoom: 2,
         maxZoom: 19,
-        worldCopyJump: true,
         preferCanvas: true,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
       });
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // Track touch drag / zoom interactions to pause background kinematic ticks and achieve 60fps
+      map.on('movestart', () => { isMapInteractingRef.current = true; });
+      map.on('moveend', () => { isMapInteractingRef.current = false; });
 
       const tileConfig = GOOGLE_MAP_TILES[tileMode] || GOOGLE_MAP_TILES.roadmap;
       const tileLayer = L.tileLayer(tileConfig.url, {
         attribution: tileConfig.attribution,
         subdomains: tileConfig.subdomains,
         maxZoom: tileConfig.maxZoom,
-        keepBuffer: 2,
-        updateWhenIdle: true,
-        updateWhenZooming: false,
+        keepBuffer: 1, // Minimize RAM overhead on low-spec phones
+        updateWhenIdle: false, // Progressive streaming while panning
+        updateWhenZooming: false, // Defer tile decode until zoom finishes
+        updateInterval: 150,
       }).addTo(map);
 
       tileLayerRef.current = tileLayer;
@@ -194,12 +206,32 @@ export default function MapTracker() {
           setSelectedEntity(null);
         }
       });
+
+      // Handle orientation change and viewport resizing seamlessly
+      handleResize = () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize({ debounceMoveend: true });
+        }
+      };
+      window.addEventListener('resize', handleResize, { passive: true });
+      window.addEventListener('orientationchange', handleResize, { passive: true });
+
+      // Invalidate size once layout settles
+      requestAnimationFrame(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      });
     }
 
     initMap();
 
     return () => {
       isMounted = false;
+      if (handleResize) {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('orientationchange', handleResize);
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -212,7 +244,8 @@ export default function MapTracker() {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
     async function switchTile() {
-      const L = (await import('leaflet')).default;
+      const L = leafletModuleRef.current || (await import('leaflet')).default;
+      leafletModuleRef.current = L;
       const tileConfig = GOOGLE_MAP_TILES[tileMode] || GOOGLE_MAP_TILES.roadmap;
       mapInstanceRef.current.removeLayer(tileLayerRef.current);
 
@@ -220,9 +253,10 @@ export default function MapTracker() {
         attribution: tileConfig.attribution,
         subdomains: tileConfig.subdomains,
         maxZoom: tileConfig.maxZoom,
-        keepBuffer: 2,
-        updateWhenIdle: true,
+        keepBuffer: 1,
+        updateWhenIdle: false,
         updateWhenZooming: false,
+        updateInterval: 150,
       }).addTo(mapInstanceRef.current);
     }
 
@@ -288,18 +322,21 @@ export default function MapTracker() {
     };
   }, [refreshData]);
 
-  // Client-Side Real-Time Dead Reckoning Engine (Every 1 second):
+  // Client-Side Real-Time Dead Reckoning Engine (Every 2.5 seconds):
   // Continuously advances plane and ship positions smoothly worldwide
   useEffect(() => {
     const kinematicTicker = setInterval(() => {
-      // Pause kinematic calculation when tab is hidden to save mobile CPU/battery
+      // Pause kinematic calculation when tab is hidden or user is actively panning/zooming map
       if (typeof document !== 'undefined' && document.hidden) return;
+      if (isMapInteractingRef.current) return;
+
+      const deltaSeconds = 2.5;
 
       // 1. Advance aircraft in real-time
       setPlanes((prevPlanes) =>
         prevPlanes.map((p) => {
           if (p.onGround || !p.velocity) return p;
-          const vMs = p.velocity * 0.514444;
+          const vMs = p.velocity * 0.514444 * deltaSeconds;
           const rad = ((p.heading || 0) * Math.PI) / 180;
           const dLat = (vMs * Math.cos(rad)) / 111139;
           const dLon = (vMs * Math.sin(rad)) / (111139 * Math.cos((p.latitude * Math.PI) / 180));
@@ -322,7 +359,7 @@ export default function MapTracker() {
       setShips((prevShips) =>
         prevShips.map((s) => {
           if (!s.sog || s.sog < 0.3) return s;
-          const vMs = s.sog * 0.514444;
+          const vMs = s.sog * 0.514444 * deltaSeconds;
           const rad = (((s.heading || s.cog || 0)) * Math.PI) / 180;
           const dLat = (vMs * Math.cos(rad)) / 111139;
           const dLon = (vMs * Math.sin(rad)) / (111139 * Math.cos((s.latitude * Math.PI) / 180));
@@ -340,7 +377,7 @@ export default function MapTracker() {
           };
         })
       );
-    }, 1000);
+    }, 2500);
 
     return () => clearInterval(kinematicTicker);
   }, []);
@@ -351,7 +388,8 @@ export default function MapTracker() {
     let isSubscribed = true;
 
     async function updatePlanes() {
-      const L = (await import('leaflet')).default;
+      const L = leafletModuleRef.current || (await import('leaflet')).default;
+      leafletModuleRef.current = L;
       if (!isSubscribed || !mapInstanceRef.current) return;
 
       const map = mapInstanceRef.current;
@@ -389,7 +427,7 @@ export default function MapTracker() {
               ${isSelected ? '<div class="absolute inset-0 rounded-full bg-amber-500/40 ping-selected pointer-events-none"></div>' : ''}
               <div class="marker-rotator relative flex items-center justify-center w-8 h-8 transition-transform duration-300"
                    style="transform: rotate(${heading}deg);">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] hover:scale-125 transition-transform" fill="currentColor">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 hover:scale-125 transition-transform" fill="currentColor">
                   <path fill="#f59e0b" stroke="#0f172a" stroke-width="0.8" stroke-linejoin="round" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
                 </svg>
               </div>
@@ -461,7 +499,8 @@ export default function MapTracker() {
     let isSubscribed = true;
 
     async function updateShips() {
-      const L = (await import('leaflet')).default;
+      const L = leafletModuleRef.current || (await import('leaflet')).default;
+      leafletModuleRef.current = L;
       if (!isSubscribed || !mapInstanceRef.current) return;
 
       const map = mapInstanceRef.current;
@@ -503,7 +542,7 @@ export default function MapTracker() {
               ${isSelected ? '<div class="absolute inset-0 rounded-full bg-cyan-500/40 ping-selected pointer-events-none"></div>' : ''}
               <div class="marker-rotator relative flex items-center justify-center w-7 h-7 transition-transform duration-300"
                    style="transform: rotate(${heading}deg);">
-                <svg viewBox="0 0 24 24" class="w-5 h-5 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] hover:scale-125 transition-transform" fill="currentColor">
+                <svg viewBox="0 0 24 24" class="w-5 h-5 hover:scale-125 transition-transform" fill="currentColor">
                   <path fill="#0284c7" stroke="#0f172a" stroke-width="0.8" stroke-linejoin="round" d="M12 2L6 8v11a2 2 0 002 2h8a2 2 0 002-2V8l-6-6zm0 3.5l3.5 3.5h-7L12 5.5zM8 11h8v7H8v-7z"/>
                 </svg>
               </div>

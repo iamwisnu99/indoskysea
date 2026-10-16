@@ -1,4 +1,7 @@
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const viewport = {
   width: 'device-width',
@@ -139,7 +142,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        
+
         {/* PWA Manifest & Mobile Web App Meta */}
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -186,6 +189,8 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-slate-50 text-slate-900 min-h-screen overflow-hidden select-none font-sans">
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

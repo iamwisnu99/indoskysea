@@ -22,24 +22,17 @@ body {
   height: 100%;
   background: #eef2f6 !important;
   font-family: inherit;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 /* GPU Hardware Acceleration for Map Layer Panes */
-.leaflet-marker-pane {
-  will-change: transform;
-  contain: layout style;
-}
-
+.leaflet-marker-pane,
 .leaflet-tile-pane {
-  contain: strict;
+  will-change: transform;
 }
 
 .custom-plane-icon,
 .custom-ship-icon {
-  will-change: transform;
-  transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -157,12 +150,12 @@ body {
 /* Mobile & Mid-range GPU optimization: lower blur overhead to preserve 60fps */
 @media (max-width: 768px) {
   .glass-clean {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   .glass-clean-card {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 }
 
