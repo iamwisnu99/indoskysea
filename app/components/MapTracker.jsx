@@ -665,13 +665,21 @@ export default function MapTracker() {
           
           {/* Left: Brand & Search */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 pointer-events-auto shrink-0">
-            {/* Brand Badge */}
-            <div className="glass-clean rounded-xl px-2.5 sm:px-4 h-9 sm:h-11 flex items-center space-x-2 sm:space-x-2.5 shadow-sm">
-              <span className="relative flex h-2 sm:h-2.5 w-2 sm:w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 sm:h-2.5 w-2 sm:w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-extrabold tracking-wide text-slate-800 uppercase whitespace-nowrap">
+            {/* Brand Logo & Name */}
+            <div
+              onClick={() => {
+                handlePresetChange('ID');
+                setSelectedTarget(null);
+              }}
+              className="glass-clean rounded-xl px-2.5 sm:px-3.5 h-9 sm:h-11 flex items-center space-x-2 sm:space-x-2.5 shadow-sm cursor-pointer hover:bg-white/95 active:scale-95 transition-all select-none"
+              title="IndoSkySea - Klik untuk reset ke tampilan Indonesia"
+            >
+              <img
+                src="/favicon-96x96.png"
+                alt="IndoSkySea Logo"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg object-contain shadow-2xs shrink-0"
+              />
+              <span className="text-xs sm:text-[13px] font-black tracking-wider text-slate-800 uppercase whitespace-nowrap">
                 IndoSkySea
               </span>
             </div>
