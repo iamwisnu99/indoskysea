@@ -78,6 +78,7 @@ flight-radar/
 │   ├── site.webmanifest          # PWA web manifest specification
 │   └── sw.js                     # PWA caching service worker
 ├── next.config.js                # Next.js security headers and optimization
+├── vercel.json                   # Vercel deployment, sin1 region & caching headers
 ├── tailwind.config.js            # Tailwind theme tokens
 ├── package.json                  # Dependencies and build scripts
 ├── LICENSE                       # MIT License
